@@ -11,7 +11,7 @@ module NCurses =
         
         // C Types
 
-        type Cint = int32 // TODO: C integer size is platform dependent? int32 works on 64 bit. 
+        type Cint = int32  
         type Cptr = nativeint
 
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]

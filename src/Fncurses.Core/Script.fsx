@@ -49,3 +49,6 @@ run add1
 
 // relative paths in interactive sessions
 // http://stackoverflow.com/questions/10917300/how-can-i-get-f-interractive-window-to-use-the-same-path-as-the-project
+
+// git: make current commit the only commit (initial commit)
+// http://stackoverflow.com/questions/9683279/make-the-current-commit-the-only-initial-commit-in-a-git-repository
