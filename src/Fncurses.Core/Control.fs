@@ -224,7 +224,7 @@ module Control =
     [<CompiledName("StatefulResult")>]
     let statefulNcurses = StatefulResultBuilder ()
 
-module ResultArray =
+module NcursesArray =
 
     open Control
     open Microsoft.FSharp.Control

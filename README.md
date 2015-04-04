@@ -7,8 +7,8 @@ fncurses is an F# wrapper for the ncurses native library.
     let helloworld () =
         ncurses {
             do! "hello, world".ToCharArray() 
-                |> ResultArray.iter (fun ch ->
-                    result { 
+                |> NcursesArray.iter (fun ch ->
+                    ncurses { 
                         do! addch ch
                         do! refresh ()
                         do! napms 100

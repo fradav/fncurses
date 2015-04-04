@@ -7,7 +7,7 @@ module Example =
     let greetings () =
         ncurses {
            do! "Greetings from fncurses!".ToCharArray() 
-                |> ResultArray.iter (fun ch ->
+                |> NcursesArray.iter (fun ch ->
                     ncurses { 
                         do! addch ch
                         do! refresh ()

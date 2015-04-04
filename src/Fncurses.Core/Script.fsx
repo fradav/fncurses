@@ -3,10 +3,10 @@ System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 open Fncurses.Core
 
 let add1 () =
-    result {
+    ncurses {
         do! "Greetings from NCurses!".ToCharArray() 
-            |> ResultArray.iter (fun ch ->
-                result { 
+            |> NcursesArray.iter (fun ch ->
+                ncurses { 
                     do! addch ch
                     do! refresh ()
                     do! napms 100
@@ -14,7 +14,7 @@ let add1 () =
     }
 
 let run f =
-    result {
+    ncurses {
         let! win = initscr ()
         do! f ()
         let! ch = wgetch win
