@@ -4,11 +4,11 @@ module Example =
 
     // Book
 
-    let add1 () =
-        result {
-           do! "Greetings from NCurses!".ToCharArray() 
+    let greetings () =
+        ncurses {
+           do! "Greetings from fncurses!".ToCharArray() 
                 |> ResultArray.iter (fun ch ->
-                    result { 
+                    ncurses { 
                         do! addch ch
                         do! refresh ()
                         do! napms 100
@@ -130,7 +130,7 @@ module Example =
     // runners
 
 let run f =
-    result {
+    ncurses {
         let! win = initscr ()
         do! f ()
         let! ch = wgetch win
@@ -153,6 +153,6 @@ let run f =
 
 [<EntryPoint>]
 let main argv =
-    match run Example.add1 with
+    match run Example.greetings with
     | Success _ -> 0
     | Failure reason -> printfn "%s" reason; 1

@@ -7,6 +7,40 @@ module NCurses =
     open System.Reflection
     open System.Runtime.InteropServices    
 
+    module Types =
+
+        // WINDOW *    pointer to screen representation
+        // SCREEN *    pointer to terminal descriptor
+        // bool        boolean data type
+        // chtype      representation of a character in a window
+        // cchar_t     the wide-character equivalent of chtype
+        // attr_t      for WA_-style attributes
+        ()
+
+    module Variables =
+
+        // LINES       number of lines on terminal screen
+        // COLS        number of columns on terminal screen
+        // stdscr      pointer to the default screen window    
+        // curscr      pointer to the current screen image
+        // SP      pointer to the current SCREEN struct
+        // Mouse_status    status of the mouse
+        // COLORS      number of colors available
+        // COLOR_PAIRS number of color pairs available
+        // TABSIZE     size of one TAB block
+        // acs_map[]   alternate character set map  
+        // ttytype[]   terminal name/description
+        ()
+
+    module Constants =
+
+        // FALSE       boolean false value
+        // TRUE        boolean true value
+        // NULL        zero pointer value
+        // ERR     value returned on error condition
+        // OK      value returned on successful completion
+        ()
+
     module Imported =
         
         // C Types

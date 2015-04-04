@@ -124,8 +124,8 @@ module Control =
                     this.Delay (fun () ->
                         body enum.Current)))
 
-    [<CompiledName("Result")>]
-    let result = ResultBuilder ()
+    [<CompiledName("NCurses")>]
+    let ncurses = ResultBuilder ()
  
     /// <summary>
     /// </summary>
@@ -222,7 +222,7 @@ module Control =
                             body enum.Current))))
 
     [<CompiledName("StatefulResult")>]
-    let statefulResult = StatefulResultBuilder ()
+    let statefulNcurses = StatefulResultBuilder ()
 
 module ResultArray =
 
