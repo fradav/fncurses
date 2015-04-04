@@ -4,11 +4,9 @@ fncurses is an F# wrapper for the ncurses native library.
 
     open Fncurses.Core
     
-    NCurses.initLib @"..\..\lib\native\windows\amd64\pdcurses.dll"
-    
-    let add1 () =
-        result {
-            do! "Greetings from NCurses!".ToCharArray() 
+    let helloworld () =
+        ncurses {
+            do! "hello, world".ToCharArray() 
                 |> ResultArray.iter (fun ch ->
                     result { 
                         do! addch ch
@@ -18,14 +16,14 @@ fncurses is an F# wrapper for the ncurses native library.
         }
     
     let run f =
-        result {
+        ncurses {
             let! win = initscr ()
             do! f ()
             let! ch = wgetch win
             return! endwin ()
         }
     
-    run add1
+    run helloworld
     
 ## Maintainer(s)
 
