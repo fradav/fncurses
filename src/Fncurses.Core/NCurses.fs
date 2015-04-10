@@ -31,40 +31,69 @@ module NCurses =
 
     [<AutoOpen>]
     module Types =
-
-        // Pointer to screen representation
+       
         type WinPtr = IntPtr
-
-        // Pointer to terminal descriptor
         type ScrPtr = IntPtr
-
-        // bool        boolean data type
-
-        /// Representation of a character in a window
         type ChType = System.UInt32
-
-        /// The wide-character equivalent of chtype
+        type ChTypePtr = string
+        type CharPtr = string
         type CChar_t = ChType
-
-        /// For WA_-style attributes
         type Attr_t = ChType
-
         type CInt = int16
-
         type CChar = sbyte
+        type Attr_tPtr = IntPtr
+        type CShort = int16
+        type CShortPtr = IntPtr
+        type CVoid = unit
+        type CVoidPtr = IntPtr
+        type CBool = bool
 
     module Imported =
 
+        // Delegate types
+
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_unit_winptr = delegate of unit -> WinPtr
+        type cvoid_winptr = delegate of CVoid -> WinPtr
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_unit_cint = delegate of unit -> CInt      
+        type cvoid_cint = delegate of CVoid -> CInt      
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_chtype_cint = delegate of ChType -> CInt      
+        type chtype_cint = delegate of ChType -> CInt      
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_cint_cint = delegate of CInt -> CInt      
+        type cint_cint = delegate of CInt -> CInt      
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_winptr_cint = delegate of WinPtr -> CInt      
+        type winptr_cint = delegate of WinPtr -> CInt      
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type chtypeptr_cint = delegate of ChTypePtr -> CInt      
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type chtypeptr_cint_cint = delegate of ChTypePtr * CInt -> CInt      
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type charptr_cint_cint = delegate of CharPtr * CInt -> CInt      
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type charptr_cint = delegate of CharPtr -> CInt      
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type attrtptr_cshortptr_cvoidptr_cint = delegate of Attr_tPtr * CShortPtr * CVoidPtr -> CInt      
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type attrt_cvoidptr_cint = delegate of Attr_t * CVoidPtr -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type attrt_cshort_cvoidptr_cint = delegate of Attr_t * CShort * CVoidPtr -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type chtype_cvoid = delegate of ChType -> CVoid
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type chtype_chtype_chtype_chtype_chtype_chtype_chtype_chtype_cint = delegate of ChType * ChType * ChType * ChType * ChType * ChType * ChType * ChType -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type winptr_chtype_chtype_cint = delegate of WinPtr * ChType * ChType -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type cvoid_cbool = delegate of CVoid -> CBool
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type cint_attrt_cshort_cvoidptr_cint = delegate of CInt * Attr_t * CShort * CVoidPtr -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type winptr_cbool_cint = delegate of WinPtr * CBool -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type cshort_cshortptr_cshortptr_cshortptr_cint = delegate of CShort * CShortPtr * CShortPtr * CShortPtr -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type cshort_cvoidptr_cint = delegate of CShort * CVoidPtr -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type winptr_winptr_cint_cint_cint_cint_cint_cint_cint_cint = delegate of WinPtr * WinPtr * CInt * CInt * CInt * CInt * CInt * CInt * CInt -> CInt 
 
         // Dynamic library loading
 
@@ -92,14 +121,537 @@ module NCurses =
         
         // Imported delegates
 
-        let _initscr = Platform.getDelegate<ncurses_unit_winptr> loader libPtr "initscr"
-        let _addch = Platform.getDelegate<ncurses_chtype_cint> loader libPtr "addch"
-        let _napms = Platform.getDelegate<ncurses_cint_cint> loader libPtr "napms"
-        let _refresh = Platform.getDelegate<ncurses_unit_cint> loader libPtr "refresh"
-        let _endwin = Platform.getDelegate<ncurses_unit_cint> loader libPtr "endwin"
-        let _wgetch = Platform.getDelegate<ncurses_winptr_cint> loader libPtr "wgetch"
+        let _initscr = Platform.getDelegate<cvoid_winptr> loader libPtr "initscr"
+        //let _addch = Platform.getDelegate<chtype_cint> loader libPtr "addch"
+        let _napms = Platform.getDelegate<cint_cint> loader libPtr "napms"
+        let _refresh = Platform.getDelegate<cvoid_cint> loader libPtr "refresh"
+        let _endwin = Platform.getDelegate<cvoid_cint> loader libPtr "endwin"
+        let _wgetch = Platform.getDelegate<winptr_cint> loader libPtr "wgetch"
 
-
+        // int     addch(const chtype);
+        let _addch = Platform.getDelegate<chtype_cint> loader libPtr "addch"
+        // int     addchnstr(const chtype *, int);
+        let _addchnstr = Platform.getDelegate<chtypeptr_cint_cint> loader libPtr "addchnstr"
+        // int     addchstr(const chtype *);
+        let _addchstr = Platform.getDelegate<chtypeptr_cint> loader libPtr "addchstr"
+        // int     addnstr(const char *, int);
+        let _addnstr = Platform.getDelegate<charptr_cint_cint> loader libPtr "addnstr"
+        // int     addstr(const char *);
+        let _addstr = Platform.getDelegate<charptr_cint> loader libPtr "addstr"
+        // int     attroff(chtype);
+        let _attroff = Platform.getDelegate<chtype_cint> loader libPtr "attroff"
+        // int     attron(chtype);
+        let _attron = Platform.getDelegate<chtype_cint> loader libPtr "attron"
+        // int     attrset(chtype);
+        let _attrset = Platform.getDelegate<chtype_cint> loader libPtr "attrset"
+        // int     attr_get(attr_t *, short *, void *);
+        let _attr_get = Platform.getDelegate<attrtptr_cshortptr_cvoidptr_cint> loader libPtr "attr_get"
+        // int     attr_off(attr_t, void *);
+        let _attr_off = Platform.getDelegate<attrt_cvoidptr_cint> loader libPtr "attr_off"
+        // int     attr_on(attr_t, void *);
+        let _attr_on = Platform.getDelegate<attrt_cvoidptr_cint> loader libPtr "attr_on"
+        // int     attr_set(attr_t, short, void *);
+        let _attr_set = Platform.getDelegate<attrt_cshort_cvoidptr_cint> loader libPtr "attr_set"
+        // int     baudrate(void);
+        let _baudrate = Platform.getDelegate<cvoid_cint> loader libPtr "baudrate"
+        // int     beep(void);
+        let _beep = Platform.getDelegate<chtype_cint> loader libPtr "beep"
+        // int     bkgd(chtype);
+        let _bkgd = Platform.getDelegate<chtype_cint> loader libPtr "bkgd"
+        // void    bkgdset(chtype);
+        let _bkgdset = Platform.getDelegate<chtype_cvoid> loader libPtr "bkgdset"
+        // int     border(chtype, chtype, chtype, chtype, chtype, chtype, chtype, chtype);
+        let _border = Platform.getDelegate<chtype_chtype_chtype_chtype_chtype_chtype_chtype_chtype_cint> loader libPtr "border"
+        // int     box(WINDOW *, chtype, chtype);
+        let _box = Platform.getDelegate<winptr_chtype_chtype_cint> loader libPtr "box"
+        // bool    can_change_color(void);
+        let _can_change_color = Platform.getDelegate<cvoid_cbool> loader libPtr "can_change_color"
+        // int     cbreak(void); 
+        let _cbreak = Platform.getDelegate<cvoid_cint> loader libPtr "cbreak"
+        // int     chgat(int, attr_t, short, const void *);
+        let _chgat = Platform.getDelegate<cint_attrt_cshort_cvoidptr_cint> loader libPtr "chgat"
+        // int     clearok(WINDOW *, bool);
+        let _clearok = Platform.getDelegate<winptr_cbool_cint> loader libPtr "clearok"
+        // int     clear(void);
+        let _clear = Platform.getDelegate<cvoid_cint> loader libPtr "clear"
+        // int     clrtobot(void);
+        let _clrtobot = Platform.getDelegate<cvoid_cint> loader libPtr "clrtobot"
+        // int     clrtoeol(void);
+        let _clrtoeol = Platform.getDelegate<cvoid_cint> loader libPtr "clrtoeol"
+        // int     color_content(short, short *, short *, short *);
+        let _color_content = Platform.getDelegate<cshort_cshortptr_cshortptr_cshortptr_cint> loader libPtr "color_content"
+        // int     color_set(short, void *);
+        let _color_set = Platform.getDelegate<cshort_cvoidptr_cint> loader libPtr "color_set"
+        // int     copywin(const WINDOW *, WINDOW *, int, int, int, int, int, int, int);
+        let _copywin = Platform.getDelegate<winptr_winptr_cint_cint_cint_cint_cint_cint_cint_cint> loader libPtr "copywin"
+        // int     curs_set(int);
+        let _curs_set = Platform.getDelegate<cint_cint> loader libPtr "curs_set"
+        // int     def_prog_mode(void);
+        let _def_prog_mode = Platform.getDelegate<cvoid_cint> loader libPtr "def_prog_mode"
+        // int     def_shell_mode(void);
+        let _def_shell_mode = Platform.getDelegate<cvoid_cint> loader libPtr "def_shell_mode"
+        // int     delay_output(int);
+        let _delay_output = Platform.getDelegate<cint_cint> loader libPtr "delay_output"
+        // int     delch(void);
+        let _delch = Platform.getDelegate<cvoid_cint> loader libPtr "delch"
+        // int     deleteln(void);
+        let _deleteln = Platform.getDelegate<cvoid_cint> loader libPtr "deleteln"
+        // void    delscreen(SCREEN *); 
+        let _delscreen = Platform.getDelegate<> loader libPtr "delscreen"
+        // int     delwin(WINDOW *);
+        let _delwin = Platform.getDelegate<> loader libPtr "delwin"
+        // WINDOW *derwin(WINDOW *, int, int, int, int);
+        let _derwin = Platform.getDelegate<> loader libPtr "derwin"
+        // int     doupdate(void);
+        let _doupdate = Platform.getDelegate<cvoid_cint> loader libPtr "doupdate"
+        // WINDOW *dupwin(WINDOW *);
+        let _dupwin = Platform.getDelegate<> loader libPtr "dupwin"
+        // int     echochar(const chtype);
+        let _echochar = Platform.getDelegate<chtype_cint> loader libPtr "echochar"
+        // int     echo(void);
+        let _echo = Platform.getDelegate<cvoid_cint> loader libPtr "echo"
+        // int     endwin(void);
+        let _endwin = Platform.getDelegate<cvoid_cint> loader libPtr "endwin"
+        // char    erasechar(void);
+        let _erasechar = Platform.getDelegate<> loader libPtr "erasechar"
+        // int     erase(void);
+        let _erase = Platform.getDelegate<cvoid_cint> loader libPtr "erase"
+        // void    filter(void);
+        let _filter = Platform.getDelegate<cvoid_cvoid> loader libPtr "filter"
+        // int     flash(void);
+        let _flash = Platform.getDelegate<cvoid_cint> loader libPtr "flash"
+        // int     flushinp(void);
+        let _flushinp = Platform.getDelegate<cvoid_cint> loader libPtr "flushinp"
+        // chtype  getbkgd(WINDOW *);
+        let _getbkgd = Platform.getDelegate<> loader libPtr "getbkgd"
+        // int     getnstr(char *, int);
+        let _getnstr = Platform.getDelegate<> loader libPtr "getnstr"
+        // int     getstr(char *);
+        let _getstr = Platform.getDelegate<> loader libPtr "getstr"
+        // WINDOW *getwin(FILE *);
+        let _getwin = Platform.getDelegate<> loader libPtr "getwin"
+        // int     halfdelay(int);
+        let _halfdelay = Platform.getDelegate<cint_cint> loader libPtr "halfdelay"
+        // bool    has_colors(void);
+        let _has_colors = Platform.getDelegate<cvoid_cbool> loader libPtr "has_colors"
+        // bool    has_ic(void);
+        let _has_ic = Platform.getDelegate<cvoid_cbool> loader libPtr "has_ic"
+        // bool    has_il(void);
+        let _has_il = Platform.getDelegate<cvoid_cbool> loader libPtr "has_il"
+        // int     hline(chtype, int);
+        let _hline = Platform.getDelegate<> loader libPtr "hline"
+        // void    idcok(WINDOW *, bool);
+        let _idcok = Platform.getDelegate<> loader libPtr "idcok"
+        // int     idlok(WINDOW *, bool);
+        let _idlok = Platform.getDelegate<> loader libPtr "idlok"
+        // void    immedok(WINDOW *, bool);
+        let _immedok = Platform.getDelegate<> loader libPtr "immedok"
+        // int     inchnstr(chtype *, int);
+        let _inchnstr = Platform.getDelegate<> loader libPtr "inchnstr"
+        // int     inchstr(chtype *);
+        let _inchstr = Platform.getDelegate<> loader libPtr "inchstr"
+        // chtype  inch(void);
+        let _inch = Platform.getDelegate<cvoid_chtype> loader libPtr "inch"
+        // int     init_color(short, short, short, short);
+        let _init_color = Platform.getDelegate<> loader libPtr "init_color"
+        // int     init_pair(short, short, short);
+        let _init_pair = Platform.getDelegate<> loader libPtr "init_pair"
+        // WINDOW *initscr(void);
+        let _initscr = Platform.getDelegate<> loader libPtr "initscr"
+        // int     innstr(char *, int);
+        let _innstr = Platform.getDelegate<> loader libPtr "innstr"
+        // int     insch(chtype);
+        let _insch = Platform.getDelegate<chtype_cint> loader libPtr "insch"
+        // int     insdelln(int);
+        let _insdelln = Platform.getDelegate<cint_cint> loader libPtr "insdelln"
+        // int     insertln(void);
+        let _insertln = Platform.getDelegate<cvoid_cint> loader libPtr "insertln"
+        // int     insnstr(const char *, int);
+        let _insnstr = Platform.getDelegate<> loader libPtr "insnstr"
+        // int     insstr(const char *);
+        let _insstr = Platform.getDelegate<> loader libPtr "insstr"
+        // int     instr(char *);
+        let _instr = Platform.getDelegate<> loader libPtr "instr"
+        // int     intrflush(WINDOW *, bool);
+        let _intrflush = Platform.getDelegate<> loader libPtr "intrflush"
+        // bool    isendwin(void);
+        let _isendwin = Platform.getDelegate<> loader libPtr "isendwin"
+        // bool    is_linetouched(WINDOW *, int);
+        let _is_linetouched = Platform.getDelegate<> loader libPtr "is_linetouched"
+        // bool    is_wintouched(WINDOW *);
+        let _is_wintouched = Platform.getDelegate<> loader libPtr "is_wintouched"
+        // char   *keyname(int);
+        let _keyname = Platform.getDelegate<> loader libPtr "keyname"
+        // int     keypad(WINDOW *, bool);
+        let _keypad = Platform.getDelegate<> loader libPtr "keypad"
+        // char    killchar(void);
+        let _killchar = Platform.getDelegate<> loader libPtr "killchar"
+        // int     leaveok(WINDOW *, bool);
+        let _leaveok = Platform.getDelegate<> loader libPtr "leaveok"
+        // char   *longname(void);
+        let _longname = Platform.getDelegate<> loader libPtr "longname"
+        // int     meta(WINDOW *, bool);
+        let _meta = Platform.getDelegate<> loader libPtr "meta"
+        // int     move(int, int);
+        let _move = Platform.getDelegate<> loader libPtr "move"
+        // int     mvaddch(int, int, const chtype);
+        let _mvaddch = Platform.getDelegate<> loader libPtr "mvaddch"
+        // int     mvaddchnstr(int, int, const chtype *, int);
+        let _mvaddchnstr = Platform.getDelegate<> loader libPtr "mvaddchnstr"
+        // int     mvaddchstr(int, int, const chtype *);
+        let _mvaddchstr = Platform.getDelegate<> loader libPtr "mvaddchstr"
+        // int     mvaddnstr(int, int, const char *, int);
+        let _mvaddnstr = Platform.getDelegate<> loader libPtr "mvaddnstr"
+        // int     mvaddstr(int, int, const char *);
+        let _mvaddstr = Platform.getDelegate<> loader libPtr "mvaddstr"
+        // int     mvchgat(int, int, int, attr_t, short, const void *);
+        let _mvchgat = Platform.getDelegate<> loader libPtr "mvchgat"
+        // int     mvcur(int, int, int, int);
+        let _mvcur = Platform.getDelegate<> loader libPtr "mvcur"
+        // int     mvdelch(int, int);
+        let _mvdelch = Platform.getDelegate<> loader libPtr "mvdelch"
+        // int     mvderwin(WINDOW *, int, int);
+        let _mvderwin = Platform.getDelegate<> loader libPtr "mvderwin"
+        // int     mvgetch(int, int);
+        let _mvgetch = Platform.getDelegate<> loader libPtr "mvgetch"
+        // int     mvgetnstr(int, int, char *, int);
+        let _mvgetnstr = Platform.getDelegate<> loader libPtr "mvgetnstr"
+        // int     mvgetstr(int, int, char *);
+        let _mvgetstr = Platform.getDelegate<> loader libPtr "mvgetstr"
+        // int     mvhline(int, int, chtype, int);
+        let _mvhline = Platform.getDelegate<> loader libPtr "mvhline"
+        // chtype  mvinch(int, int);
+        let _mvinch = Platform.getDelegate<> loader libPtr "mvinch"
+        // int     mvinchnstr(int, int, chtype *, int);
+        let _mvinchnstr = Platform.getDelegate<> loader libPtr "mvinchnstr"
+        // int     mvinchstr(int, int, chtype *);
+        let _mvinchstr = Platform.getDelegate<> loader libPtr "mvinchstr"
+        // int     mvinnstr(int, int, char *, int);
+        let _mvinnstr = Platform.getDelegate<> loader libPtr "mvinnstr"
+        // int     mvinsch(int, int, chtype);
+        let _mvinsch = Platform.getDelegate<> loader libPtr "mvinsch"
+        // int     mvinsnstr(int, int, const char *, int);
+        let _mvinsnstr = Platform.getDelegate<> loader libPtr "mvinsnstr"
+        // int     mvinsstr(int, int, const char *);
+        let _mvinsstr = Platform.getDelegate<> loader libPtr "mvinsstr"
+        // int     mvinstr(int, int, char *);
+        let _mvinstr = Platform.getDelegate<> loader libPtr "mvinstr"
+        // int     mvprintw(int, int, const char *, ...);
+        let _mvprintw = Platform.getDelegate<> loader libPtr "mvprintw"
+        // int     mvscanw(int, int, const char *, ...);
+        let _mvscanw = Platform.getDelegate<> loader libPtr "mvscanw"
+        // int     mvvline(int, int, chtype, int);
+        let _mvvline = Platform.getDelegate<> loader libPtr "mvvline"
+        // int     mvwaddchnstr(WINDOW *, int, int, const chtype *, int);
+        let _mvwaddchnstr = Platform.getDelegate<> loader libPtr "mvwaddchnstr"
+        // int     mvwaddchstr(WINDOW *, int, int, const chtype *);
+        let _mvwaddchstr = Platform.getDelegate<> loader libPtr "mvwaddchstr"
+        // int     mvwaddch(WINDOW *, int, int, const chtype);
+        let _mvwaddch = Platform.getDelegate<> loader libPtr "mvwaddch"
+        // int     mvwaddnstr(WINDOW *, int, int, const char *, int);
+        let _mvwaddnstr = Platform.getDelegate<> loader libPtr "mvwaddnstr"
+        // int     mvwaddstr(WINDOW *, int, int, const char *);
+        let _mvwaddstr = Platform.getDelegate<> loader libPtr "mvwaddstr"
+        // int     mvwchgat(WINDOW *, int, int, int, attr_t, short, const void *);
+        let _mvwchgat = Platform.getDelegate<> loader libPtr "mvwchgat"
+        // int     mvwdelch(WINDOW *, int, int);
+        let _mvwdelch = Platform.getDelegate<> loader libPtr "mvwdelch"
+        // int     mvwgetch(WINDOW *, int, int);
+        let _mvwgetch = Platform.getDelegate<> loader libPtr "mvwgetch"
+        // int     mvwgetnstr(WINDOW *, int, int, char *, int);
+        let _mvwgetnstr = Platform.getDelegate<> loader libPtr "mvwgetnstr"
+        // int     mvwgetstr(WINDOW *, int, int, char *);
+        let _mvwgetstr = Platform.getDelegate<> loader libPtr "mvwgetstr"
+        // int     mvwhline(WINDOW *, int, int, chtype, int);
+        let _mvwhline = Platform.getDelegate<> loader libPtr "mvwhline"
+        // int     mvwinchnstr(WINDOW *, int, int, chtype *, int);
+        let _mvwinchnstr = Platform.getDelegate<> loader libPtr "mvwinchnstr"
+        // int     mvwinchstr(WINDOW *, int, int, chtype *);
+        let _mvwinchstr = Platform.getDelegate<> loader libPtr "mvwinchstr"
+        // chtype  mvwinch(WINDOW *, int, int);
+        let _mvwinch = Platform.getDelegate<> loader libPtr "mvwinch"
+        // int     mvwinnstr(WINDOW *, int, int, char *, int);
+        let _mvwinnstr = Platform.getDelegate<> loader libPtr "mvwinnstr"
+        // int     mvwinsch(WINDOW *, int, int, chtype);
+        let _mvwinsch = Platform.getDelegate<> loader libPtr "mvwinsch"
+        // int     mvwinsnstr(WINDOW *, int, int, const char *, int);
+        let _mvwinsnstr = Platform.getDelegate<> loader libPtr "mvwinsnstr"
+        // int     mvwinsstr(WINDOW *, int, int, const char *);
+        let _mvwinsstr = Platform.getDelegate<> loader libPtr "mvwinsstr"
+        // int     mvwinstr(WINDOW *, int, int, char *);
+        let _mvwinstr = Platform.getDelegate<> loader libPtr "mvwinstr"
+        // int     mvwin(WINDOW *, int, int);
+        let _mvwin = Platform.getDelegate<> loader libPtr "mvwin"
+        // int     mvwprintw(WINDOW *, int, int, const char *, ...);
+        let _mvwprintw = Platform.getDelegate<> loader libPtr "mvwprintw"
+        // int     mvwscanw(WINDOW *, int, int, const char *, ...);
+        let _mvwscanw = Platform.getDelegate<> loader libPtr "mvwscanw"
+        // int     mvwvline(WINDOW *, int, int, chtype, int);
+        let _mvwvline = Platform.getDelegate<> loader libPtr "mvwvline"
+        // int     napms(int);
+        let _napms = Platform.getDelegate<> loader libPtr "napms"
+        // WINDOW *newpad(int, int);
+        let _newpad = Platform.getDelegate<> loader libPtr "newpad"
+        // SCREEN *newterm(const char *, FILE *, FILE *);
+        let _newterm = Platform.getDelegate<> loader libPtr "newterm"
+        // WINDOW *newwin(int, int, int, int);
+        let _newwin = Platform.getDelegate<> loader libPtr "newwin"
+        // int     nl(void);
+        let _nl = Platform.getDelegate<> loader libPtr "nl"
+        // int     nocbreak(void);
+        let _nocbreak = Platform.getDelegate<> loader libPtr "nocbreak"
+        // int     nodelay(WINDOW *, bool);
+        let _nodelay = Platform.getDelegate<> loader libPtr "nodelay"
+        // int     noecho(void);
+        let _noecho = Platform.getDelegate<> loader libPtr "noecho"
+        // int     nonl(void);
+        let _nonl = Platform.getDelegate<> loader libPtr "nonl"
+        // void    noqiflush(void);
+        let _noqiflush = Platform.getDelegate<> loader libPtr "noqiflush"
+        // int     noraw(void);
+        let _noraw = Platform.getDelegate<> loader libPtr "noraw"
+        // int     notimeout(WINDOW *, bool);
+        let _notimeout = Platform.getDelegate<> loader libPtr "notimeout"
+        // int     overlay(const WINDOW *, WINDOW *);
+        let _overlay = Platform.getDelegate<> loader libPtr "overlay"
+        // int     overwrite(const WINDOW *, WINDOW *);
+        let _overwrite = Platform.getDelegate<> loader libPtr "overwrite"
+        // int     pair_content(short, short *, short *);
+        let _pair_content = Platform.getDelegate<> loader libPtr "pair_content"
+        // int     pechochar(WINDOW *, chtype);
+        let _pechochar = Platform.getDelegate<> loader libPtr "pechochar"
+        // int     pnoutrefresh(WINDOW *, int, int, int, int, int, int);
+        let _pnoutrefresh = Platform.getDelegate<> loader libPtr "pnoutrefresh"
+        // int     prefresh(WINDOW *, int, int, int, int, int, int);
+        let _prefresh = Platform.getDelegate<> loader libPtr "prefresh"
+        // int     printw(const char *, ...);
+        let _printw = Platform.getDelegate<> loader libPtr "printw"
+        // int     putwin(WINDOW *, FILE *);
+        let _putwin = Platform.getDelegate<> loader libPtr "putwin"
+        // void    qiflush(void);
+        let _qiflush = Platform.getDelegate<> loader libPtr "qiflush"
+        // int     raw(void);
+        let _raw = Platform.getDelegate<> loader libPtr "raw"
+        // int     redrawwin(WINDOW *);
+        let _redrawwin = Platform.getDelegate<> loader libPtr "redrawwin"
+        // int     refresh(void);
+        let _refresh = Platform.getDelegate<> loader libPtr "refresh"
+        // int     reset_prog_mode(void);
+        let _reset_prog_mode = Platform.getDelegate<> loader libPtr "reset_prog_mode"
+        // int     reset_shell_mode(void);
+        let _reset_shell_mode = Platform.getDelegate<> loader libPtr "reset_shell_mode"
+        // int     resetty(void);
+        let _resetty = Platform.getDelegate<> loader libPtr "resetty"
+        // int     ripoffline(int, int (*)(WINDOW *, int));
+        let _ripoffline = Platform.getDelegate<> loader libPtr "ripoffline"
+        // int     savetty(void);
+        let _savetty = Platform.getDelegate<> loader libPtr "savetty"
+        // int     scanw(const char *, ...);
+        let _scanw = Platform.getDelegate<> loader libPtr "scanw"
+        // int     scr_dump(const char *);
+        let _scr_dump = Platform.getDelegate<> loader libPtr "scr_dump"
+        // int     scr_init(const char *);
+        let _scr_init = Platform.getDelegate<> loader libPtr "scr_init"
+        // int     scr_restore(const char *);
+        let _scr_restore = Platform.getDelegate<> loader libPtr "scr_restore"
+        // int     scr_set(const char *);
+        let _scr_set = Platform.getDelegate<> loader libPtr "scr_set"
+        // int     scrl(int);
+        let _scrl = Platform.getDelegate<> loader libPtr "scrl"
+        // int     scroll(WINDOW *);
+        let _scroll = Platform.getDelegate<> loader libPtr "scroll"
+        // int     scrollok(WINDOW *, bool);
+        let _scrollok = Platform.getDelegate<> loader libPtr "scrollok"
+        // SCREEN *set_term(SCREEN *);
+        let _set_term = Platform.getDelegate<> loader libPtr "set_term"
+        // int     setscrreg(int, int);
+        let _setscrreg = Platform.getDelegate<> loader libPtr "setscrreg"
+        // int     slk_attroff(const chtype);
+        let _slk_attroff = Platform.getDelegate<> loader libPtr "slk_attroff"
+        // int     slk_attr_off(const attr_t, void *);
+        let _slk_attr_off = Platform.getDelegate<> loader libPtr "slk_attr_off"
+        // int     slk_attron(const chtype);
+        let _slk_attron = Platform.getDelegate<> loader libPtr "slk_attron"
+        // int     slk_attr_on(const attr_t, void *);
+        let _slk_attr_on = Platform.getDelegate<> loader libPtr "slk_attr_on"
+        // int     slk_attrset(const chtype);
+        let _slk_attrset = Platform.getDelegate<> loader libPtr "slk_attrset"
+        // int     slk_attr_set(const attr_t, short, void *);
+        let _slk_attr_set = Platform.getDelegate<> loader libPtr "slk_attr_set"
+        // int     slk_clear(void);
+        let _slk_clear = Platform.getDelegate<> loader libPtr "slk_clear"
+        // int     slk_color(short);
+        let _slk_color = Platform.getDelegate<> loader libPtr "slk_color"
+        // int     slk_init(int);
+        let _slk_init = Platform.getDelegate<> loader libPtr "slk_init"
+        // char   *slk_label(int);
+        let _slk_label = Platform.getDelegate<> loader libPtr "slk_label"
+        // int     slk_noutrefresh(void);
+        let _slk_noutrefresh = Platform.getDelegate<> loader libPtr "slk_noutrefresh"
+        // int     slk_refresh(void);
+        let _slk_refresh = Platform.getDelegate<> loader libPtr "slk_refresh"
+        // int     slk_restore(void);
+        let _slk_restore = Platform.getDelegate<> loader libPtr "slk_restore"
+        // int     slk_set(int, const char *, int);
+        let _slk_set = Platform.getDelegate<> loader libPtr "slk_set"
+        // int     slk_touch(void);
+        let _slk_touch = Platform.getDelegate<> loader libPtr "slk_touch"
+        // int     standend(void);
+        let _standend = Platform.getDelegate<> loader libPtr "standend"
+        // int     standout(void);
+        let _standout = Platform.getDelegate<> loader libPtr "standout"
+        // int     start_color(void);
+        let _start_color = Platform.getDelegate<> loader libPtr "start_color"
+        // WINDOW *subpad(WINDOW *, int, int, int, int);
+        let _subpad = Platform.getDelegate<> loader libPtr "subpad"
+        // WINDOW *subwin(WINDOW *, int, int, int, int);
+        let _subwin = Platform.getDelegate<> loader libPtr "subwin"
+        // int     syncok(WINDOW *, bool);
+        let _syncok = Platform.getDelegate<> loader libPtr "syncok"
+        // chtype  termattrs(void);
+        let _termattrs = Platform.getDelegate<> loader libPtr "termattrs"
+        // attr_t  term_attrs(void);
+        let _term_attrs = Platform.getDelegate<> loader libPtr "term_attrs"
+        // char   *termname(void);
+        let _termname = Platform.getDelegate<> loader libPtr "termname"
+        // void    timeout(int);
+        let _timeout = Platform.getDelegate<> loader libPtr "timeout"
+        // int     touchline(WINDOW *, int, int);
+        let _touchline = Platform.getDelegate<> loader libPtr "touchline"
+        // int     touchwin(WINDOW *);
+        let _touchwin = Platform.getDelegate<> loader libPtr "touchwin"
+        // int     typeahead(int);
+        let _typeahead = Platform.getDelegate<> loader libPtr "typeahead"
+        // int     untouchwin(WINDOW *);
+        let _untouchwin = Platform.getDelegate<> loader libPtr "untouchwin"
+        // void    use_env(bool);
+        let _use_env = Platform.getDelegate<cbool_cvoid> loader libPtr "use_env"
+        // int     vidattr(chtype);
+        let _vidattr = Platform.getDelegate<chtype_cint> loader libPtr "vidattr"
+        // int     vid_attr(attr_t, short, void *);
+        let _vid_attr = Platform.getDelegate<> loader libPtr "vid_attr"
+        // int     vidputs(chtype, int (*)(int));
+        let _vidputs = Platform.getDelegate<> loader libPtr "vidputs"
+        // int     vid_puts(attr_t, short, void *, int (*)(int));
+        let _vid_puts = Platform.getDelegate<> loader libPtr "vid_puts"
+        // int     vline(chtype, int);
+        let _vline = Platform.getDelegate<> loader libPtr "vline"
+        // int     vw_printw(WINDOW *, const char *, va_list);
+        let _vw_printw = Platform.getDelegate<> loader libPtr "vw_printw"
+        // int     vwprintw(WINDOW *, const char *, va_list);
+        let _vwprintw = Platform.getDelegate<> loader libPtr "vwprintw"
+        // int     vw_scanw(WINDOW *, const char *, va_list);
+        let _vw_scanw = Platform.getDelegate<> loader libPtr "vw_scanw"
+        // int     vwscanw(WINDOW *, const char *, va_list);
+        let _vwscanw = Platform.getDelegate<> loader libPtr "vwscanw"
+        // int     waddchnstr(WINDOW *, const chtype *, int);
+        let _waddchnstr = Platform.getDelegate<> loader libPtr "waddchnstr"
+        // int     waddchstr(WINDOW *, const chtype *);
+        let _waddchstr = Platform.getDelegate<> loader libPtr "waddchstr"
+        // int     waddch(WINDOW *, const chtype);
+        let _waddch = Platform.getDelegate<> loader libPtr "waddch"
+        // int     waddnstr(WINDOW *, const char *, int);
+        let _waddnstr = Platform.getDelegate<> loader libPtr "waddnstr"
+        // int     waddstr(WINDOW *, const char *);
+        let _waddstr = Platform.getDelegate<> loader libPtr "waddstr"
+        // int     wattroff(WINDOW *, chtype);
+        let _wattroff = Platform.getDelegate<> loader libPtr "wattroff"
+        // int     wattron(WINDOW *, chtype);
+        let _wattron = Platform.getDelegate<> loader libPtr "wattron"
+        // int     wattrset(WINDOW *, chtype);
+        let _wattrset = Platform.getDelegate<> loader libPtr "wattrset"
+        // int     wattr_get(WINDOW *, attr_t *, short *, void *);
+        let _wattr_get = Platform.getDelegate<> loader libPtr "wattr_get"
+        // int     wattr_off(WINDOW *, attr_t, void *);
+        let _wattr_off = Platform.getDelegate<> loader libPtr "wattr_off"
+        // int     wattr_on(WINDOW *, attr_t, void *);
+        let _wattr_on = Platform.getDelegate<> loader libPtr "wattr_on"
+        // int     wattr_set(WINDOW *, attr_t, short, void *);
+        let _wattr_set = Platform.getDelegate<> loader libPtr "wattr_set"
+        // void    wbkgdset(WINDOW *, chtype);
+        let _wbkgdset = Platform.getDelegate<> loader libPtr "wbkgdset"
+        // int     wbkgd(WINDOW *, chtype);
+        let _wbkgd = Platform.getDelegate<> loader libPtr "wbkgd"
+        // int     wborder(WINDOW *, chtype, chtype, chtype, chtype, chtype, chtype, chtype, chtype);
+        let _wborder = Platform.getDelegate<> loader libPtr "wborder"
+        // int     wchgat(WINDOW *, int, attr_t, short, const void *);
+        let _wchgat = Platform.getDelegate<> loader libPtr "wchgat"
+        // int     wclear(WINDOW *);
+        let _wclear = Platform.getDelegate<> loader libPtr "wclear"
+        // int     wclrtobot(WINDOW *);
+        let _wclrtobot = Platform.getDelegate<> loader libPtr "wclrtobot"
+        // int     wclrtoeol(WINDOW *);
+        let _wclrtoeol = Platform.getDelegate<> loader libPtr "wclrtoeol"
+        // int     wcolor_set(WINDOW *, short, void *);
+        let _wcolor_set = Platform.getDelegate<> loader libPtr "wcolor_set"
+        // void    wcursyncup(WINDOW *);
+        let _wcursyncup = Platform.getDelegate<> loader libPtr "wcursyncup"
+        // int     wdelch(WINDOW *);
+        let _wdelch = Platform.getDelegate<> loader libPtr "wdelch"
+        // int     wdeleteln(WINDOW *);
+        let _wdeleteln = Platform.getDelegate<> loader libPtr "wdeleteln"
+        // int     wechochar(WINDOW *, const chtype);
+        let _wechochar = Platform.getDelegate<> loader libPtr "wechochar"
+        // int     werase(WINDOW *);
+        let _werase = Platform.getDelegate<> loader libPtr "werase"
+        // int     wgetch(WINDOW *);
+        let _wgetch = Platform.getDelegate<> loader libPtr "wgetch"
+        // int     wgetnstr(WINDOW *, char *, int);
+        let _wgetnstr = Platform.getDelegate<> loader libPtr "wgetnstr"
+        // int     wgetstr(WINDOW *, char *);
+        let _wgetstr = Platform.getDelegate<> loader libPtr "wgetstr"
+        // int     whline(WINDOW *, chtype, int);
+        let _whline = Platform.getDelegate<> loader libPtr "whline"
+        // int     winchnstr(WINDOW *, chtype *, int);
+        let _winchnstr = Platform.getDelegate<> loader libPtr "winchnstr"
+        // int     winchstr(WINDOW *, chtype *);
+        let _winchstr = Platform.getDelegate<> loader libPtr "winchstr"
+        // chtype  winch(WINDOW *);
+        let _winch = Platform.getDelegate<> loader libPtr "winch"
+        // int     winnstr(WINDOW *, char *, int);
+        let _winnstr = Platform.getDelegate<> loader libPtr "winnstr"
+        // int     winsch(WINDOW *, chtype);
+        let _winsch = Platform.getDelegate<> loader libPtr "winsch"
+        // int     winsdelln(WINDOW *, int);
+        let _winsdelln = Platform.getDelegate<> loader libPtr "winsdelln"
+        // int     winsertln(WINDOW *);
+        let _winsertln = Platform.getDelegate<> loader libPtr "winsertln"
+        // int     winsnstr(WINDOW *, const char *, int);
+        let _winsnstr = Platform.getDelegate<> loader libPtr "winsnstr"
+        // int     winsstr(WINDOW *, const char *);
+        let _winsstr = Platform.getDelegate<> loader libPtr "winsstr"
+        // int     winstr(WINDOW *, char *);
+        let _winstr = Platform.getDelegate<> loader libPtr "winstr"
+        // int     wmove(WINDOW *, int, int);
+        let _wmove = Platform.getDelegate<> loader libPtr "wmove"
+        // int     wnoutrefresh(WINDOW *);
+        let _wnoutrefresh = Platform.getDelegate<> loader libPtr "wnoutrefresh"
+        // int     wprintw(WINDOW *, const char *, ...);
+        let _wprintw = Platform.getDelegate<> loader libPtr "wprintw"
+        // int     wredrawln(WINDOW *, int, int);
+        let _wredrawln = Platform.getDelegate<> loader libPtr "wredrawln"
+        // int     wrefresh(WINDOW *);
+        let _wrefresh = Platform.getDelegate<> loader libPtr "wrefresh"
+        // int     wscanw(WINDOW *, const char *, ...);
+        let _wscanw = Platform.getDelegate<> loader libPtr "wscanw"
+        // int     wscrl(WINDOW *, int);
+        let _wscrl = Platform.getDelegate<> loader libPtr "wscrl"
+        // int     wsetscrreg(WINDOW *, int, int);
+        let _wsetscrreg = Platform.getDelegate<> loader libPtr "wsetscrreg"
+        // int     wstandend(WINDOW *);
+        let _wstandend = Platform.getDelegate<> loader libPtr "wstandend"
+        // int     wstandout(WINDOW *);
+        let _wstandout = Platform.getDelegate<> loader libPtr "wstandout"
+        // void    wsyncdown(WINDOW *);
+        let _wsyncdown = Platform.getDelegate<> loader libPtr "wsyncdown"
+        // void    wsyncup(WINDOW *);
+        let _wsyncup = Platform.getDelegate<> loader libPtr "wsyncup"
+        // void    wtimeout(WINDOW *, int);
+        let _wtimeout = Platform.getDelegate<> loader libPtr "wtimeout"
+        // int     wtouchln(WINDOW *, int, int, int);
+        let _wtouchln = Platform.getDelegate<> loader libPtr "wtouchln"
+        // int     wvline(WINDOW *, chtype, int);
+        let _wvline = Platform.getDelegate<> loader libPtr "wvline"
 
         // Wrapped delegates
 
