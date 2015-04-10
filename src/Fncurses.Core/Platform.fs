@@ -114,3 +114,32 @@ module Platform =
             Marshal.GetDelegateForFunctionPointer(procAddress, typeof<'T>) :?> 'T
         else
             failwith (sprintf "cannot find imported function %s" functionName)
+
+    let getVariable (loader: ILibraryLoader) libPtr reader variableName =
+        let procAddress = loader.GetProcAddress(libPtr, variableName)
+        if procAddress <> IntPtr.Zero then
+            reader procAddress
+        else
+            failwith (sprintf "cannot find imported variable %s" variableName)
+
+    let getCInt (loader: ILibraryLoader) libPtr variableName =
+        getVariable loader libPtr Marshal.ReadInt16 variableName
+ 
+    let getWinPtr (loader: ILibraryLoader) libPtr variableName =
+        getVariable loader libPtr Marshal.ReadIntPtr variableName
+ 
+    let getScrPtr (loader: ILibraryLoader) libPtr variableName =
+        getVariable loader libPtr Marshal.ReadIntPtr variableName
+ 
+    let getMOUSE_STATUS (loader: ILibraryLoader) libPtr variableName =
+        //getVariable loader libPtr Marshal.ReadInt16 variableName
+        raise <| NotImplementedException()
+ 
+    let getChTypeArray (loader: ILibraryLoader) libPtr variableName =
+        //getVariable loader libPtr Marshal.ReadInt16 variableName
+        raise <| NotImplementedException()
+
+    let getCCharArray (loader: ILibraryLoader) libPtr variableName =
+        //getVariable loader libPtr Marshal.PtrToStringAnsi variableName
+        raise <| NotImplementedException()
+ 

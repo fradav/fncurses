@@ -7,55 +7,64 @@ module NCurses =
     open System.Reflection
     open System.Runtime.InteropServices    
 
-    module Types =
-
-        // WINDOW *    pointer to screen representation
-        // SCREEN *    pointer to terminal descriptor
-        // bool        boolean data type
-        // chtype      representation of a character in a window
-        // cchar_t     the wide-character equivalent of chtype
-        // attr_t      for WA_-style attributes
-        ()
-
-    module Variables =
-
-        // LINES       number of lines on terminal screen
-        // COLS        number of columns on terminal screen
-        // stdscr      pointer to the default screen window    
-        // curscr      pointer to the current screen image
-        // SP      pointer to the current SCREEN struct
-        // Mouse_status    status of the mouse
-        // COLORS      number of colors available
-        // COLOR_PAIRS number of color pairs available
-        // TABSIZE     size of one TAB block
-        // acs_map[]   alternate character set map  
-        // ttytype[]   terminal name/description
-        ()
-
+    [<AutoOpen>]
     module Constants =
 
-        // FALSE       boolean false value
-        // TRUE        boolean true value
-        // NULL        zero pointer value
-        // ERR     value returned on error condition
-        // OK      value returned on successful completion
-        ()
+        /// boolean false value
+        [<Literal>] 
+        let FALSE = 0
+
+        /// boolean true value
+        [<Literal>] 
+        let TRUE = 1
+
+        /// zero pointer value
+        let NULL = IntPtr.Zero
+
+        /// value returned on error condition
+        [<Literal>] 
+        let ERR = -1s
+
+        /// value returned on successful completion
+        [<Literal>] 
+        let OK = 0s
+
+    [<AutoOpen>]
+    module Types =
+
+        // Pointer to screen representation
+        type WinPtr = IntPtr
+
+        // Pointer to terminal descriptor
+        type ScrPtr = IntPtr
+
+        // bool        boolean data type
+
+        /// Representation of a character in a window
+        type ChType = System.UInt32
+
+        /// The wide-character equivalent of chtype
+        type CChar_t = ChType
+
+        /// For WA_-style attributes
+        type Attr_t = ChType
+
+        type CInt = int16
+
+        type CChar = sbyte
 
     module Imported =
-        
-        // C Types
-
-        type Cint = int32  
-        type Cptr = nativeint
 
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_unit_cptr = delegate of unit -> Cptr
+        type ncurses_unit_winptr = delegate of unit -> WinPtr
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_unit_cint = delegate of unit -> Cint      
+        type ncurses_unit_cint = delegate of unit -> CInt      
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_cint_cint = delegate of Cint -> Cint      
+        type ncurses_chtype_cint = delegate of ChType -> CInt      
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type ncurses_cptr_cint = delegate of Cptr -> Cint      
+        type ncurses_cint_cint = delegate of CInt -> CInt      
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type ncurses_winptr_cint = delegate of WinPtr -> CInt      
 
         // Dynamic library loading
 
@@ -67,14 +76,30 @@ module NCurses =
                 (fun () -> Platform.winLibraryPath "pdcurses.dll")
         let libPtr = loader.LoadLibrary(dllPath)
 
+        // Imported variable getters
+
+        let LINES () = Platform.getCInt loader libPtr "LINES"
+        let COLS () = Platform.getCInt loader libPtr "COLS"
+        let stdscr () = Platform.getWinPtr loader libPtr "stdscr"
+        let curscr () = Platform.getWinPtr loader libPtr "curscr"
+        let SP () = Platform.getScrPtr loader libPtr "SP"
+        let Mouse_status () = Platform.getMOUSE_STATUS loader libPtr "MOUSE_STATUS"
+        let COLORS () = Platform.getCInt loader libPtr "COLORS"
+        let COLOR_PAIRS () = Platform.getCInt loader libPtr "COLOR_PAIRS"
+        let TABSIZE () = Platform.getCInt loader libPtr "TABSIZE"
+        let acs_map () = Platform.getChTypeArray loader libPtr "acs_map"
+        let ttytype () = Platform.getCCharArray loader libPtr "ttytype"
+        
         // Imported delegates
 
-        let _initscr = Platform.getDelegate<ncurses_unit_cptr> loader libPtr "initscr"
-        let _addch = Platform.getDelegate<ncurses_cint_cint> loader libPtr "addch"
+        let _initscr = Platform.getDelegate<ncurses_unit_winptr> loader libPtr "initscr"
+        let _addch = Platform.getDelegate<ncurses_chtype_cint> loader libPtr "addch"
         let _napms = Platform.getDelegate<ncurses_cint_cint> loader libPtr "napms"
         let _refresh = Platform.getDelegate<ncurses_unit_cint> loader libPtr "refresh"
         let _endwin = Platform.getDelegate<ncurses_unit_cint> loader libPtr "endwin"
-        let _wgetch = Platform.getDelegate<ncurses_cptr_cint> loader libPtr "wgetch"
+        let _wgetch = Platform.getDelegate<ncurses_winptr_cint> loader libPtr "wgetch"
+
+
 
         // Wrapped delegates
 
@@ -88,17 +113,17 @@ module NCurses =
     module Check =
 
         let cptrResult fname result =
-            if result = IntPtr.Zero 
+            if result = NULL 
             then Result.error (sprintf "%s returned NULL" fname)
             else Result.result result
 
         let cintResult fname result = 
-            if result = -1
+            if result = ERR
             then Result.error (sprintf "%s returned ERR" fname)
             else Result.result result
 
         let unitResult fname result = 
-            if result = -1
+            if result = ERR
             then Result.error (sprintf "%s returned ERR" fname)
             else Result.result ()
 
@@ -106,7 +131,7 @@ module NCurses =
     // TODO: getch incompatible with windows? use wgetch instead
     let getch () = raise <| NotImplementedException()
     let wgetch win = Imported.wgetch(win) |> Check.cintResult "wgetch"
-    let inline addch ch = Imported.addch(int ch) |> Check.unitResult "addch"
+    let addch (ch:char) = Imported.addch(System.Convert.ToUInt32 ch) |> Check.unitResult "addch"
     let napms ms = Imported.napms(ms) |> Check.unitResult "napms"
     let refresh () = Imported.refresh() |> Check.unitResult "refresh"
     let endwin () = Imported.endwin() |> Check.cintResult "endwin"

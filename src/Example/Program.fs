@@ -6,12 +6,12 @@ module Example =
 
     let greetings () =
         ncurses {
-           do! "Greetings from fncurses!".ToCharArray() 
+            do! "Greetings from fncurses!".ToCharArray() 
                 |> NcursesArray.iter (fun ch ->
                     ncurses { 
                         do! addch ch
                         do! refresh ()
-                        do! napms 100
+                        do! napms 100s
                     })
         }
 
