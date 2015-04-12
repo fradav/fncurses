@@ -35,7 +35,6 @@ module NCurses =
         type ChType = System.UInt32
         type Args = obj array
         type Attr_t = ChType
-        type Attr_tPtr = IntPtr
         type CBool = bool
         type CChar = sbyte
         type CCharPtr = IntPtr
@@ -57,7 +56,7 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type Attr_t_CVoidPtr_CInt = delegate of Attr_t * CVoidPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type Attr_tPtr_CShortPtr_CVoidPtr_CInt = delegate of Attr_tPtr * CShortPtr * CVoidPtr -> CInt
+        type Attr_tRef_CShortRef_CVoidRef_CInt = delegate of Attr_t byref * CShort byref * CVoidPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CBool_CVoid = delegate of CBool -> CVoid
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -66,6 +65,10 @@ module NCurses =
         type CCharPtr_CInt = delegate of CCharPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CCharPtr_CInt_CInt = delegate of CCharPtr * CInt -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type CCharRef_CInt = delegate of CCharPtr byref -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type CCharRef_CInt_CInt = delegate of CCharPtr byref * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CCharPtr_CVoid = delegate of CCharPtr -> CVoid
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -133,9 +136,9 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CShort_CShort_CShort_CShort_CInt = delegate of CShort * CShort * CShort * CShort -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CShort_CShortPtr_CShortPtr_CInt = delegate of CShort * CShortPtr * CShortPtr -> CInt
+        type CShort_CShortRef_CShortRef_CInt = delegate of CShort * CShort byref * CShort byref -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CShort_CShortPtr_CShortPtr_CShortPtr_CInt = delegate of CShort * CShortPtr * CShortPtr * CShortPtr -> CInt
+        type CShort_CShortRef_CShortRef_CShortRef_CInt = delegate of CShort * CShort byref * CShort byref * CShort byref -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CShort_CVoidPtr_CInt = delegate of CShort * CVoidPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -165,7 +168,7 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_Attr_t_CVoidPtr_CInt = delegate of WinPtr * Attr_t * CVoidPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type WinPtr_Attr_tPtr_CShortPtr_CVoidPtr_CInt = delegate of WinPtr * Attr_tPtr * CShortPtr * CVoidPtr -> CInt
+        type WinPtr_Attr_tRef_CShortRef_CVoidPtr_CInt = delegate of WinPtr * Attr_t byref * CShort byref * CVoidPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CBool = delegate of WinPtr -> CBool
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -276,7 +279,7 @@ module NCurses =
             // int     attrset(ChType);
             let attrset = Platform.getDelegate<ChType_CInt> loader libPtr "attrset"
             // int     attr_get(attr_t *, short *, void *);
-            let attr_get = Platform.getDelegate<Attr_tPtr_CShortPtr_CVoidPtr_CInt> loader libPtr "attr_get"
+            let attr_get = Platform.getDelegate<Attr_tRef_CShortRef_CVoidRef_CInt> loader libPtr "attr_get"
             // int     attr_off(attr_t, void *);
             let attr_off = Platform.getDelegate<Attr_t_CVoidPtr_CInt> loader libPtr "attr_off"
             // int     attr_on(attr_t, void *);
@@ -310,7 +313,7 @@ module NCurses =
             // int     clrtoeol(void);
             let clrtoeol = Platform.getDelegate<CVoid_CInt> loader libPtr "clrtoeol"
             // int     color_content(short, short *, short *, short *);
-            let color_content = Platform.getDelegate<CShort_CShortPtr_CShortPtr_CShortPtr_CInt> loader libPtr "color_content"
+            let color_content = Platform.getDelegate<CShort_CShortRef_CShortRef_CShortRef_CInt> loader libPtr "color_content"
             // int     color_set(short, void *);
             let color_set = Platform.getDelegate<CShort_CVoidPtr_CInt> loader libPtr "color_set"
             // int     copywin(const WINDOW *, WINDOW *, int, int, int, int, int, int, int);
@@ -356,9 +359,9 @@ module NCurses =
             // ChType  getbkgd(WINDOW *);
             let getbkgd = Platform.getDelegate<WinPtr_ChType> loader libPtr "getbkgd"
             // int     getnstr(char *, int);
-            let getnstr = Platform.getDelegate<CCharPtr_CInt_CInt> loader libPtr "getnstr"
+            let getnstr = Platform.getDelegate<CCharRef_CInt_CInt> loader libPtr "getnstr"
             // int     getstr(char *);
-            let getstr = Platform.getDelegate<CCharPtr_CInt> loader libPtr "getstr"
+            let getstr = Platform.getDelegate<CCharRef_CInt> loader libPtr "getstr"
             // WINDOW *getwin(FILE *);
             let getwin = Platform.getDelegate<CFilePtr_WinPtr> loader libPtr "getwin"
             // int     halfdelay(int);
@@ -548,7 +551,7 @@ module NCurses =
             // int     overwrite(const WINDOW *, WINDOW *);
             let overwrite = Platform.getDelegate<WinPtr_WinPtr_CInt> loader libPtr "overwrite"
             // int     pair_content(short, short *, short *);
-            let pair_content = Platform.getDelegate<CShort_CShortPtr_CShortPtr_CInt> loader libPtr "pair_content"
+            let pair_content = Platform.getDelegate<CShort_CShortRef_CShortRef_CInt> loader libPtr "pair_content"
             // int     pechochar(WINDOW *, ChType);
             let pechochar = Platform.getDelegate<WinPtr_ChType_CInt> loader libPtr "pechochar"
             // int     pnoutrefresh(WINDOW *, int, int, int, int, int, int);
@@ -692,7 +695,7 @@ module NCurses =
             // int     wattrset(WINDOW *, ChType);
             let wattrset = Platform.getDelegate<WinPtr_ChType_CInt> loader libPtr "wattrset"
             // int     wattr_get(WINDOW *, attr_t *, short *, void *);
-            let wattr_get = Platform.getDelegate<WinPtr_Attr_tPtr_CShortPtr_CVoidPtr_CInt> loader libPtr "wattr_get"
+            let wattr_get = Platform.getDelegate<WinPtr_Attr_tRef_CShortRef_CVoidPtr_CInt> loader libPtr "wattr_get"
             // int     wattr_off(WINDOW *, attr_t, void *);
             let wattr_off = Platform.getDelegate<WinPtr_Attr_t_CVoidPtr_CInt> loader libPtr "wattr_off"
             // int     wattr_on(WINDOW *, attr_t, void *);
@@ -811,13 +814,12 @@ module NCurses =
         let attr_get () =
             let mutable attrs = 0u
             let mutable color_pair = 0s
-            let mutable opts = 0
-            match Delegate.attr_get.Invoke(&attrs, &color_pair, &opts) with
-            | OK -> Choice1Of2 (attrs, color_pair, opts)
-            | err -> Choice2Of2 err
-        let attr_off attrs opts = Delegate.attr_off.Invoke(attrs, opts)
-        let attr_on attrs opts = Delegate.attr_on.Invoke(attrs, opts)
-        let attr_set attrs pair opts = Delegate.attr_set.Invoke(attrs, pair, opts)
+            match Delegate.attr_get.Invoke(&attrs, &color_pair, NULL) with
+            | OK -> Some (attrs, color_pair)
+            | _ -> None
+        let attr_off attrs = Delegate.attr_off.Invoke(attrs, NULL)
+        let attr_on attrs = Delegate.attr_on.Invoke(attrs, NULL)
+        let attr_set attrs pair = Delegate.attr_set.Invoke(attrs, pair, NULL)
         let baudrate () = Delegate.baudrate.Invoke()
         let beep () = Delegate.beep.Invoke()
         let bkgd ch = Delegate.bkgd.Invoke(ch)
@@ -860,8 +862,22 @@ module NCurses =
         let flash () = Delegate.flash.Invoke()
         let flushinp () = Delegate.flushinp.Invoke()
         let getbkgd win = Delegate.getbkgd.Invoke(win)
-        //let getnstr = Delegate.getnstr.Invoke() // <CCharPtr_CInt_CInt>
-        //let getstr = Delegate.getstr.Invoke() // <CCharPtr_CInt>
+        let getnstr n = 
+            let mutable str = NULL
+            match Delegate.getnstr.Invoke(&str, n) with
+            | OK -> 
+                let managedStr = Marshal.PtrToStringAnsi str
+                // TODO: free the memory allocated to str
+                Some managedStr
+            | _ -> None
+        let getstr () = 
+            let mutable str = NULL
+            match Delegate.getstr.Invoke(&str) with
+            | OK -> 
+                let managedStr = Marshal.PtrToStringAnsi str
+                // TODO: free the memory allocated to str
+                Some managedStr
+            | _ -> None
         let getwin filep = Delegate.getwin.Invoke(filep)
         let halfdelay tenths = Delegate.halfdelay.Invoke(tenths)
         let has_colors () = Delegate.has_colors.Invoke()
@@ -1036,9 +1052,8 @@ module NCurses =
         let wattr_get win =
             let mutable attrs = 0u
             let mutable color_pair = 0s
-            let mutable opts = 0
-            match Delegate.wattr_get.Invoke(win, &attrs, &color_pair, &opts) with
-            | OK -> Some (attrs, color_pair, opts)
+            match Delegate.wattr_get.Invoke(win, &attrs, &color_pair, NULL) with
+            | OK -> Some (attrs, color_pair)
             | _ -> None
         let wattr_off win attrs opts = Delegate.wattr_off.Invoke(win, attrs, opts)
         let wattr_on win attrs opts = Delegate.wattr_on.Invoke(win, attrs, opts)
