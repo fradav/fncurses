@@ -129,11 +129,15 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CInt_CInt_CInt_CInt_WinPtr = delegate of CInt * CInt * CInt * CInt -> WinPtr
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type CInt_CInt_CVoid = delegate of CInt * CInt -> CVoid
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CInt_CInt_WinPtr = delegate of CInt * CInt -> WinPtr
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CInt_CVoid = delegate of CInt -> CVoid
         //[<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         //type CInt_f_CInt_WinPtr_CInt_CInt = delegate of CInt * f * CInt * WinPtr * CInt -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type CIntRef_CIntRef_CVoid = delegate of CInt byref * CInt byref -> CVoid
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CShort_CInt = delegate of CShort -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -240,6 +244,8 @@ module NCurses =
         type WinPtr_CInt_CInt_CInt_CInt_WinPtr = delegate of WinPtr * CInt * CInt * CInt * CInt -> WinPtr
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CInt_CVoid = delegate of WinPtr * CInt -> CVoid
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type WinPtr_CIntRef_CIntRef_CVoid = delegate of WinPtr * CInt byref * CInt byref -> CVoid
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CShort_CVoidPtr_CInt = delegate of WinPtr * CShort * CVoidPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -535,20 +541,20 @@ module NCurses =
 
             // Quasi-standard functions
 
-            void getyx(WINDOW *win, int y, int x);
-            void getparyx(WINDOW *win, int y, int x);
-            void getbegyx(WINDOW *win, int y, int x);
-            void getmaxyx(WINDOW *win, int y, int x);
-            void getsyx(int y, int x);
-            int setsyx(int y, int x);
-            let getbegx win = ()
-            let getbegy win = ()
-            let getmaxx win = ()
-            let getmaxy win = ()
-            let getparx win = ()
-            let getpary win = ()
-            let getcurx win = ()
-            let getcury win = ()
+            let getyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getyx" 
+            let getparyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getparyx"
+            let getbegyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getbegyx"
+            let getmaxyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getmaxyx"
+            let getsyx = Platform.getDelegate<CIntRef_CIntRef_CVoid> loader libPtr "getsyx"
+            let setsyx = Platform.getDelegate<CInt_CInt_CVoid> loader libPtr "setsyx"
+            let getbegx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getbegx"
+            let getbegy = Platform.getDelegate<WinPtr_CInt> loader libPtr "getbegy"
+            let getmaxx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getmaxx"
+            let getmaxy = Platform.getDelegate<WinPtr_CInt> loader libPtr "getmaxy"
+            let getparx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getparx"
+            let getpary = Platform.getDelegate<WinPtr_CInt> loader libPtr "getpary"
+            let getcurx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getcurx"
+            let getcury = Platform.getDelegate<WinPtr_CInt> loader libPtr "getcury"
 
         // Imported variable getters
 
@@ -859,6 +865,40 @@ module NCurses =
         let wtimeout win delay = Delegate.wtimeout.Invoke(win, delay)
         let wtouchln win y n changed = Delegate.wtouchln.Invoke(win, y, n, changed)
         let wvline win ch n = Delegate.wvline.Invoke(win, ch, n)
+        let getyx win =
+            let mutable y = 0s
+            let mutable x = 0s
+            Delegate.getyx.Invoke(win, &y, &x)
+            y,x
+        let getparyx win =
+            let mutable y = 0s
+            let mutable x = 0s
+            Delegate.getparyx.Invoke(win, &y, &x)
+            y,x
+        let getbegyx win =
+            let mutable y = 0s
+            let mutable x = 0s
+            Delegate.getbegyx.Invoke(win, &y, &x)
+            y,x
+        let getmaxyx win =
+            let mutable y = 0s
+            let mutable x = 0s
+            Delegate.getmaxyx.Invoke(win, &y, &x)
+            y,x
+        let getsyx () =
+            let mutable y = 0s
+            let mutable x = 0s
+            Delegate.getsyx.Invoke(&y, &x)
+            y,x
+        let setsyx y x = Delegate.setsyx.Invoke(y, x)
+        let getbegx win = Delegate.getbegx.Invoke(win)
+        let getbegy win = Delegate.getbegy.Invoke(win)
+        let getmaxx win = Delegate.getmaxx.Invoke(win)
+        let getmaxy win = Delegate.getmaxy.Invoke(win)
+        let getparx win = Delegate.getparx.Invoke(win)
+        let getpary win = Delegate.getpary.Invoke(win)
+        let getcurx win = Delegate.getcurx.Invoke(win)
+        let getcury win = Delegate.getcury.Invoke(win)
 
     module Check =
 
@@ -877,6 +917,11 @@ module NCurses =
             then Result.error (sprintf "%s returned ERR" fname)
             else Result.result ()
 
+        let optionResult fname result =
+            match result with
+            | Some x -> Result.result x
+            | _ -> Result.error (sprintf "%s returned none" fname)
+
     let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
     // TODO: getch incompatible with windows? use wgetch instead
     let getch () = raise <| NotImplementedException()
@@ -885,3 +930,5 @@ module NCurses =
     let napms ms = Imported.napms(ms) |> Check.unitResult "napms"
     let refresh () = Imported.refresh() |> Check.unitResult "refresh"
     let endwin () = Imported.endwin() |> Check.cintResult "endwin"
+    let getmaxyx win = Imported.getmaxyx win |> Result.result
+    let getstr () = Imported.getstr() |> Check.optionResult "getstr"

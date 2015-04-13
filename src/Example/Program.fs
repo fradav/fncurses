@@ -15,10 +15,14 @@ module Example =
                     })
         }
 
+    // TODO: stdscr passed in as part of env?
+    // TODO: mvprintw - enumerate arguments?
+    // TODO: LINES passed in as part of env?
+
     let getstrtest () =
         ncurses {
              let message ="Enter a string: "
-             let! row,col = getmaxyx(stdscr,row,col)
+             let! row,col = getmaxyx stdscr
              do! mvprintw(row/2,(col-strlen(mesg))/2,"%s",mesg);
              let! str = getstr ()
              do! mvprintw(LINES - 2, 0, "You Entered: %s", str);
