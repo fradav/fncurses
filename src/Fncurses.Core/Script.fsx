@@ -2,6 +2,10 @@ System.Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 #r "../../bin/Fncurses.Core.dll"
 open Fncurses.Core
 
+let loader = Platform.winLoader ()
+let dllPath = @"..\..\lib\native\windows\amd64\pdcurses.dll"
+let libPtr = loader.LoadLibrary(dllPath)
+
 let add1 () =
     ncurses {
         do! "Greetings from NCurses!".ToCharArray() 
@@ -9,7 +13,7 @@ let add1 () =
                 ncurses { 
                     do! addch ch
                     do! refresh ()
-                    do! napms 100
+                    do! napms 100s
                 })
     }
 
