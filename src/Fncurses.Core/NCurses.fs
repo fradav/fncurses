@@ -5,7 +5,8 @@ module NCurses =
 
     open System
     open System.Reflection
-    open System.Runtime.InteropServices    
+    open System.Runtime.InteropServices
+    open System.Text    
 
     [<AutoOpen>]
     module Constants =
@@ -28,6 +29,10 @@ module NCurses =
         /// value returned on successful completion
         [<Literal>] 
         let OK = 0s
+
+        /// buffer size
+        [<Literal>]
+        let BUFFER_SIZE = 255s
 
     [<AutoOpen>]
     module Types =
@@ -66,9 +71,9 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CCharPtr_CInt_CInt = delegate of CCharPtr * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CCharRef_CInt = delegate of CCharPtr byref -> CInt
+        type CCharBuf_CInt = delegate of byte array -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CCharRef_CInt_CInt = delegate of CCharPtr byref * CInt -> CInt
+        type CCharBuf_CInt_CInt = delegate of byte array * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CCharPtr_CVoid = delegate of CCharPtr -> CVoid
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -263,6 +268,8 @@ module NCurses =
 
         module private Delegate =
 
+            // Standard functions
+
             let addch = Platform.getDelegate<ChType_CInt> loader libPtr "addch"
             let addchnstr = Platform.getDelegate<ChTypePtr_CInt_CInt> loader libPtr "addchnstr"
             let addchstr = Platform.getDelegate<ChTypePtr_CInt> loader libPtr "addchstr"
@@ -311,8 +318,8 @@ module NCurses =
             let flash = Platform.getDelegate<CVoid_CInt> loader libPtr "flash"
             let flushinp = Platform.getDelegate<CVoid_CInt> loader libPtr "flushinp"
             let getbkgd = Platform.getDelegate<WinPtr_ChType> loader libPtr "getbkgd"
-            let getnstr = Platform.getDelegate<CCharRef_CInt_CInt> loader libPtr "getnstr"
-            let getstr = Platform.getDelegate<CCharRef_CInt> loader libPtr "getstr"
+            let getnstr = Platform.getDelegate<CCharBuf_CInt_CInt> loader libPtr "getnstr"
+            let getstr = Platform.getDelegate<CCharBuf_CInt> loader libPtr "getstr"
             let getwin = Platform.getDelegate<CFilePtr_WinPtr> loader libPtr "getwin"
             let halfdelay = Platform.getDelegate<CInt_CInt> loader libPtr "halfdelay"
             let has_colors = Platform.getDelegate<CVoid_CBool> loader libPtr "has_colors"
@@ -526,6 +533,23 @@ module NCurses =
             let wtouchln = Platform.getDelegate<WinPtr_CInt_CInt_CInt_CInt> loader libPtr "wtouchln"
             let wvline = Platform.getDelegate<WinPtr_ChType_CInt_CInt> loader libPtr "wvline"
 
+            // Quasi-standard functions
+
+            void getyx(WINDOW *win, int y, int x);
+            void getparyx(WINDOW *win, int y, int x);
+            void getbegyx(WINDOW *win, int y, int x);
+            void getmaxyx(WINDOW *win, int y, int x);
+            void getsyx(int y, int x);
+            int setsyx(int y, int x);
+            let getbegx win = ()
+            let getbegy win = ()
+            let getmaxx win = ()
+            let getmaxy win = ()
+            let getparx win = ()
+            let getpary win = ()
+            let getcurx win = ()
+            let getcury win = ()
+
         // Imported variable getters
 
         let LINES () = Platform.getCInt loader libPtr "LINES"
@@ -601,22 +625,18 @@ module NCurses =
         let flash () = Delegate.flash.Invoke()
         let flushinp () = Delegate.flushinp.Invoke()
         let getbkgd win = Delegate.getbkgd.Invoke(win)
-        let getnstr n = 
-            let mutable str = NULL
-            match Delegate.getnstr.Invoke(&str, n) with
-            | OK -> 
-                let managedStr = Marshal.PtrToStringAnsi str
-                // TODO: free the memory allocated to str
-                Some managedStr
+        let getnstr (n:CInt) = 
+            // http://stackoverflow.com/questions/12273961/release-unmanaged-memory-from-managed-c-sharp-with-pointer-of-it
+            // http://stackoverflow.com/questions/11508260/passing-stringbuilder-to-dll-function-expecting-char-pointer
+            let buffer = Array.zeroCreate<byte> (int n)
+            match Delegate.getnstr.Invoke(buffer, n) with
+            | OK -> Some (Encoding.ASCII.GetString(buffer))
             | _ -> None
         let getstr () = 
-            let mutable str = NULL
-            match Delegate.getstr.Invoke(&str) with
-            | OK -> 
-                let managedStr = Marshal.PtrToStringAnsi str
-                // TODO: free the memory allocated to str
-                Some managedStr
-            | _ -> None
+            // getstr is dangerous - it can be the cause of buffer 
+            // overruns because it cannot know the size of the buffer being
+            // used. Use getnstr instead which passes in the buffer size.
+            getnstr BUFFER_SIZE
         let getwin filep = Delegate.getwin.Invoke(filep)
         let halfdelay tenths = Delegate.halfdelay.Invoke(tenths)
         let has_colors () = Delegate.has_colors.Invoke()

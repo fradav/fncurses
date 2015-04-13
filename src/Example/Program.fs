@@ -15,6 +15,15 @@ module Example =
                     })
         }
 
+    let getstrtest () =
+        ncurses {
+             let message ="Enter a string: "
+             let! row,col = getmaxyx(stdscr,row,col)
+             do! mvprintw(row/2,(col-strlen(mesg))/2,"%s",mesg);
+             let! str = getstr ()
+             do! mvprintw(LINES - 2, 0, "You Entered: %s", str);
+        }
+
 //    let add2 () =
 //        result {
 //            let text1 = "Oh give me a clone!\n"
