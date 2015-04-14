@@ -183,6 +183,10 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CBool_CInt = delegate of WinPtr * CBool -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type WinPtr_CCharBuf_CInt = delegate of WinPtr * byte array -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
+        type WinPtr_CCharBuf_CInt_CInt = delegate of WinPtr * byte array * CInt -> CInt
+        [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CCharPtr_Args_CInt = delegate of WinPtr * CCharPtr * Args -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CCharPtr_CInt = delegate of WinPtr * CCharPtr -> CInt
@@ -381,7 +385,6 @@ module NCurses =
             let mvinsstr = Platform.getDelegate<CInt_CInt_CCharPtr_CInt> loader libPtr "mvinsstr"
             let mvinstr = Platform.getDelegate<CInt_CInt_CCharPtr_CInt> loader libPtr "mvinstr"
             let mvprintw = Platform.getDelegate<CInt_CInt_CCharPtr_Args_CInt> loader libPtr "mvprintw"
-            let mvscanw = Platform.getDelegate<CInt_CInt_CCharPtr_Args_CInt> loader libPtr "mvscanw"
             let mvvline = Platform.getDelegate<CInt_CInt_ChType_CInt_CInt> loader libPtr "mvvline"
             let mvwaddchnstr = Platform.getDelegate<WinPtr_CInt_CInt_ChTypePtr_CInt_CInt> loader libPtr "mvwaddchnstr"
             let mvwaddchstr = Platform.getDelegate<WinPtr_CInt_CInt_ChTypePtr_CInt> loader libPtr "mvwaddchstr"
@@ -404,7 +407,6 @@ module NCurses =
             let mvwinstr = Platform.getDelegate<WinPtr_CInt_CInt_CCharPtr_CInt> loader libPtr "mvwinstr"
             let mvwin = Platform.getDelegate<WinPtr_CInt_CInt_CInt> loader libPtr "mvwin"
             let mvwprintw = Platform.getDelegate<WinPtr_CInt_CInt_CCharPtr_Args_CInt> loader libPtr "mvwprintw"
-            let mvwscanw = Platform.getDelegate<WinPtr_CInt_CInt_CCharPtr_Args_CInt> loader libPtr "mvwscanw"
             let mvwvline = Platform.getDelegate<WinPtr_CInt_CInt_ChType_CInt_CInt> loader libPtr "mvwvline"
             let napms = Platform.getDelegate<CInt_CInt> loader libPtr "napms"
             let newpad = Platform.getDelegate<CInt_CInt_WinPtr> loader libPtr "newpad"
@@ -435,7 +437,6 @@ module NCurses =
             let resetty = Platform.getDelegate<CVoid_CInt> loader libPtr "resetty"
             //let ripoffline = Platform.getDelegate<CInt_f_CInt_WinPtr_CInt_CInt> loader libPtr "ripoffline"
             let savetty = Platform.getDelegate<CVoid_CInt> loader libPtr "savetty"
-            let scanw = Platform.getDelegate<CCharPtr_Args_CInt> loader libPtr "scanw"
             let scr_dump = Platform.getDelegate<CCharPtr_CInt> loader libPtr "scr_dump"
             let scr_init = Platform.getDelegate<CCharPtr_CInt> loader libPtr "scr_init"
             let scr_restore = Platform.getDelegate<CCharPtr_CInt> loader libPtr "scr_restore"
@@ -480,10 +481,6 @@ module NCurses =
             //let vidputs = Platform.getDelegate<ChType_f_CInt_CInt> loader libPtr "vidputs"
             //let vid_puts = Platform.getDelegate<Attr_t_CShort_CVoidPtr_CInt_f_CInt_CInt_CInt> loader libPtr "vid_puts"
             let vline = Platform.getDelegate<ChType_CInt_CInt> loader libPtr "vline"
-            //let vw_printw = Platform.getDelegate<WinPtr_CCharPtr_CVAList_CInt> loader libPtr "vw_printw"
-            //let vwprintw = Platform.getDelegate<WinPtr_CCharPtr_CVAList_CInt> loader libPtr "vwprintw"
-            //let vw_scanw = Platform.getDelegate<WinPtr_CCharPtr_CVAList_CInt> loader libPtr "vw_scanw"
-            //let vwscanw = Platform.getDelegate<WinPtr_CCharPtr_CVAList_CInt> loader libPtr "vwscanw"
             let waddchnstr = Platform.getDelegate<WinPtr_ChTypePtr_CInt_CInt> loader libPtr "waddchnstr"
             let waddchstr = Platform.getDelegate<WinPtr_ChTypePtr_CInt> loader libPtr "waddchstr"
             let waddch = Platform.getDelegate<WinPtr_ChType_CInt> loader libPtr "waddch"
@@ -510,8 +507,8 @@ module NCurses =
             let wechochar = Platform.getDelegate<WinPtr_ChType_CInt> loader libPtr "wechochar"
             let werase = Platform.getDelegate<WinPtr_CInt> loader libPtr "werase"
             let wgetch = Platform.getDelegate<WinPtr_CInt> loader libPtr "wgetch"
-            let wgetnstr = Platform.getDelegate<WinPtr_CCharPtr_CInt_CInt> loader libPtr "wgetnstr"
-            let wgetstr = Platform.getDelegate<WinPtr_CCharPtr_CInt> loader libPtr "wgetstr"
+            let wgetnstr = Platform.getDelegate<WinPtr_CCharBuf_CInt_CInt> loader libPtr "wgetnstr"
+            let wgetstr = Platform.getDelegate<WinPtr_CCharBuf_CInt> loader libPtr "wgetstr"
             let whline = Platform.getDelegate<WinPtr_ChType_CInt_CInt> loader libPtr "whline"
             let winchnstr = Platform.getDelegate<WinPtr_ChTypePtr_CInt_CInt> loader libPtr "winchnstr"
             let winchstr = Platform.getDelegate<WinPtr_ChTypePtr_CInt> loader libPtr "winchstr"
@@ -528,7 +525,6 @@ module NCurses =
             let wprintw = Platform.getDelegate<WinPtr_CCharPtr_Args_CInt> loader libPtr "wprintw"
             let wredrawln = Platform.getDelegate<WinPtr_CInt_CInt_CInt> loader libPtr "wredrawln"
             let wrefresh = Platform.getDelegate<WinPtr_CInt> loader libPtr "wrefresh"
-            let wscanw = Platform.getDelegate<WinPtr_CCharPtr_Args_CInt> loader libPtr "wscanw"
             let wscrl = Platform.getDelegate<WinPtr_CInt_CInt> loader libPtr "wscrl"
             let wsetscrreg = Platform.getDelegate<WinPtr_CInt_CInt_CInt> loader libPtr "wsetscrreg"
             let wstandend = Platform.getDelegate<WinPtr_CInt> loader libPtr "wstandend"
@@ -613,8 +609,6 @@ module NCurses =
         let flushinp () = Delegate.flushinp.Invoke()
         let getbkgd win = Delegate.getbkgd.Invoke(win)
         let getnstr (n:CInt) = 
-            // http://stackoverflow.com/questions/12273961/release-unmanaged-memory-from-managed-c-sharp-with-pointer-of-it
-            // http://stackoverflow.com/questions/11508260/passing-stringbuilder-to-dll-function-expecting-char-pointer
             let buffer = Array.zeroCreate<byte> (int n)
             match Delegate.getnstr.Invoke(buffer, n) with
             | OK -> Some (Encoding.ASCII.GetString(buffer))
@@ -678,7 +672,6 @@ module NCurses =
         let mvinsnstr y x str n = Delegate.mvinsnstr.Invoke(y, x, str, n)
         let mvinsstr y x str = Delegate.mvinsstr.Invoke(y, x, str)
         //let mvinstr = Delegate.mvinstr.Invoke() // <CInt_CInt_CCharPtr_CInt>
-        //let mvscanw = Delegate.mvscanw.Invoke() // <CInt_CInt_CCharPtr_Args_CInt>
         let mvvline y x ch n = Delegate.mvvline.Invoke(y, x, ch, n)
         let mvwaddchnstr win y x chstr n = Delegate.mvwaddchnstr.Invoke(win, y, x, chstr, n)
         let mvwaddchstr win y x chstr = Delegate.mvwaddchstr.Invoke(win, y, x, chstr)
@@ -700,7 +693,6 @@ module NCurses =
         let mvwinsstr win y x str = Delegate.mvwinsstr.Invoke(win, y, x, str)
         //let mvwinstr = Delegate.mvwinstr.Invoke() // <WinPtr_CInt_CInt_CCharPtr_CInt>
         let mvwin win y x = Delegate.mvwin.Invoke(win y x)
-        //let mvwscanw = Delegate.mvwscanw.Invoke() // <WinPtr_CInt_CInt_CCharPtr_Args_CInt>
         let mvwvline win y x ch n = Delegate.mvwvline.Invoke(win, y, x, ch, n)
         let napms ms = Delegate.napms.Invoke(ms)
         let newpad nlines ncols = Delegate.newpad.Invoke(nlines, ncols)
@@ -735,7 +727,6 @@ module NCurses =
         let resetty () = Delegate.resetty.Invoke()
         //let ripoffline = Delegate.ripoffline.Invoke() // <CInt_f_CInt_WinPtr_CInt_CInt>
         let savetty () = Delegate.savetty.Invoke()
-        //let scanw = Delegate.scanw.Invoke() // <CCharPtr_Args_CInt>
         let scr_dump filename = Delegate.scr_dump.Invoke(filename)
         let scr_init filename = Delegate.scr_init.Invoke(filename)
         let scr_restore filename = Delegate.scr_restore.Invoke(filename)
@@ -780,8 +771,6 @@ module NCurses =
         //let vidputs = Delegate.vidputs.Invoke() // <ChType_f_CInt_CInt>
         //let vid_puts = Delegate.vid_puts.Invoke() // <Attr_t_CShort_CVoidPtr_CInt_f_CInt_CInt_CInt>
         let vline ch n = Delegate.vline.Invoke(ch, n)
-        //let vw_scanw = Delegate.vw_scanw.Invoke() // <WinPtr_CCharPtr_CVAList_CInt>
-        //let vwscanw = Delegate.vwscanw.Invoke() // <WinPtr_CCharPtr_CVAList_CInt>
         let waddchnstr win chstr n = Delegate.waddchnstr.Invoke(win, chstr, n)
         let waddchstr win chstr = Delegate.waddchstr.Invoke(win, chstr)
         let waddch win ch = Delegate.waddch.Invoke(win, ch)
@@ -813,8 +802,16 @@ module NCurses =
         let wechochar win ch = Delegate.wechochar.Invoke(win, ch)
         let werase win = Delegate.werase.Invoke(win)
         let wgetch win = Delegate.wgetch.Invoke(win)
-        //let wgetnstr = Delegate.wgetnstr.Invoke() // <WinPtr_CCharPtr_CInt_CInt>
-        //let wgetstr = Delegate.wgetstr.Invoke() // <WinPtr_CCharPtr_CInt>
+        let wgetnstr win (n:CInt) = 
+            let buffer = Array.zeroCreate<byte> (int n)
+            match Delegate.wgetnstr.Invoke(win, buffer, n) with
+            | OK -> Some (Encoding.ASCII.GetString(buffer))
+            | _ -> None
+        let wgetstr win = 
+            // wgetstr is dangerous - it can be the cause of buffer 
+            // overruns because it cannot know the size of the buffer being
+            // used. Use getnstr instead which passes in the buffer size.
+            wgetnstr win BUFFER_SIZE
         let whline win ch n = Delegate.whline.Invoke(win, ch, n)
         //let winchnstr = Delegate.winchnstr.Invoke() // <WinPtr_ChTypePtr_CInt_CInt>
         //let winchstr = Delegate.winchstr.Invoke() // <WinPtr_ChTypePtr_CInt>
@@ -830,7 +827,6 @@ module NCurses =
         let wnoutrefresh win = Delegate.wnoutrefresh.Invoke(win)
         let wredrawln win beg_line num_lines = Delegate.wredrawln.Invoke(win, beg_line, num_lines)
         let wrefresh win = Delegate.wrefresh.Invoke(win)
-        //let wscanw = Delegate.wscanw.Invoke() // <WinPtr_CCharPtr_Args_CInt>
         let wscrl win n = Delegate.wscrl.Invoke(win, n)
         let wsetscrreg win top bot = Delegate.wsetscrreg.Invoke(win, top, bot)
         let wstandend win = Delegate.wstandend.Invoke(win)
@@ -922,11 +918,14 @@ module NCurses =
     let endwin () = Imported.endwin() |> Check.cintResult "endwin"
     let getmaxyx win = Imported.getmaxyx win |> Result.result
     let getstr () = Imported.getstr() |> Check.optionResult "getstr"
+    let wgetnstr win n = Imported.wgetnstr win n |> Check.optionResult "wgetnstr"
+    let wgetstr win = Imported.wgetstr win |> Check.optionResult "wgetstr"
     let move y x = Imported.move y x |> Check.unitResult "move"
     let wmove win y x = Imported.wmove win y x |> Check.unitResult "move"      
     let waddstr win str = Imported.waddstr win str |> Check.unitResult "waddstr"
+
     let vwprintw win fmt = Printf.kprintf id fmt >> waddstr win
-    let printw fmt = stdscr () |> vwprintw
+    let printw fmt = vwprintw (stdscr ()) fmt
     let wprintw win fmt = vwprintw win fmt
     let mvprintw y x fmt =
         fun args ->
@@ -941,3 +940,25 @@ module NCurses =
                 return! vwprintw win fmt args
             }
     let vw_printw win fmt = vwprintw win fmt
+
+    let vwscanw win fmt = 
+        fun args ->
+            ncurses {
+                let! str = wgetnstr win BUFFER_SIZE
+                return Text.sscanf fmt str
+            }
+    let scanw fmt = vwscanw (stdscr ()) fmt
+    let wscanw win fmt = vwscanw win fmt
+    let mvscanw y x fmt =
+        fun args ->
+            ncurses {
+                do! move y x
+                return! vwscanw (stdscr ()) fmt args
+            }
+    let mvwscanw win y x fmt =
+        fun args ->
+            ncurses {
+                do! wmove win y x
+                return! vwscanw win fmt args
+            }
+    let vw_scanw win fmt = vwscanw win fmt

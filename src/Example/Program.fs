@@ -2,7 +2,7 @@
 
 module Example =
 
-    let greetings () =
+    let helloworld () =
         ncurses {
             do! "Greetings from fncurses!".ToCharArray() 
                 |> NcursesArray.iter (fun ch ->
@@ -15,13 +15,13 @@ module Example =
 
     let stringinputoutput () =
         ncurses {
-             let message ="Enter a string: "
-             let! row,col = getmaxyx <| stdscr ()
-             let y = row / 2s
-             let x = (col - int16 message.Length) / 2s
-             do! mvprintw y x "%s" message
-             let! str = getstr ()
-             do! mvprintw (LINES () - 2s) 0s "You Entered: %s" str
+            let message ="Enter a string: "
+            let! row,col = getmaxyx <| stdscr ()
+            let y = row / 2s
+            let x = (col - int16 message.Length) / 2s
+            do! mvprintw y x "%s" message
+            let! str = getstr ()
+            do! mvprintw (LINES () - 2s) 0s "You Entered: %s" str
         }
 
 //    let add2 () =
@@ -164,7 +164,7 @@ let run f =
 
 [<EntryPoint>]
 let main argv =
-    match run Example.stringinputoutput with
+    match run Example.helloworld with
     | Success _ -> 
         0
     | Failure reason -> printfn "%s" reason; 1
