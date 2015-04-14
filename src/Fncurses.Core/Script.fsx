@@ -27,6 +27,15 @@ let run f =
 
 run add1
 
+open System
+
+let test ([<ParamArray>] arr : 'a array) =
+    if arr.Length = 0 then invalidArg "arr" "must be greate than zero" else 0
+
+let log (s : string) = s
+let logger fmt = Printf.kprintf id fmt
+let foo = logger "%d %s %b" 10 "123" true
+
 // Resources
 
 // native dependencies:

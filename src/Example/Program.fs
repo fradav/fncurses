@@ -8,7 +8,7 @@ module Example =
         ncurses {
             do! "Greetings from fncurses!".ToCharArray() 
                 |> NcursesArray.iter (fun ch ->
-                    ncurses { 
+                    ncurses {
                         do! addch ch
                         do! refresh ()
                         do! napms 100s
@@ -16,16 +16,17 @@ module Example =
         }
 
     // TODO: stdscr passed in as part of env?
-    // TODO: mvprintw - enumerate arguments?
     // TODO: LINES passed in as part of env?
 
-    let getstrtest () =
+    let stringinputoutput () =
         ncurses {
              let message ="Enter a string: "
-             let! row,col = getmaxyx stdscr
-             do! mvprintw(row/2,(col-strlen(mesg))/2,"%s",mesg);
+             let! row,col = getmaxyx <| stdscr ()
+             let y = row / 2s
+             let x = (col - int16 message.Length) / 2s
+             do! mvprintw y x "%s" message
              let! str = getstr ()
-             do! mvprintw(LINES - 2, 0, "You Entered: %s", str);
+             do! mvprintw (LINES () - 2s) 0s "You Entered: %s" str
         }
 
 //    let add2 () =
@@ -145,6 +146,7 @@ module Example =
 let run f =
     ncurses {
         let! win = initscr ()
+        // TODO: set the environment variables when initscr is called or just use getter per variable?
         do! f ()
         let! ch = wgetch win
         return! endwin ()
@@ -166,6 +168,7 @@ let run f =
 
 [<EntryPoint>]
 let main argv =
-    match run Example.greetings with
-    | Success _ -> 0
+    match run Example.stringinputoutput with
+    | Success _ -> 
+        0
     | Failure reason -> printfn "%s" reason; 1

@@ -42,7 +42,7 @@ module NCurses =
         type Attr_t = ChType
         type CBool = bool
         type CChar = sbyte
-        type CCharPtr = IntPtr
+        type CCharPtr = string
         type CChar_t = ChType
         type CFilePtr = IntPtr
         type CInt = int16
@@ -263,14 +263,14 @@ module NCurses =
 
         // Dynamic library loading
 
-        let private loader = Platform.dispatch Platform.macLoader Platform.nixLoader Platform.winLoader        
-        let private dllPath = 
+        let internal loader = Platform.dispatch Platform.macLoader Platform.nixLoader Platform.winLoader        
+        let internal dllPath = 
             Platform.dispatch 
                 (fun () -> Platform.macLibraryPath "libncurses.dylib") 
                 (fun () -> Platform.nixLibraryPath "libncurses.dylib") 
                 (fun () -> Platform.winLibraryPath "pdcurses.dll")
         System.Console.WriteLine("dllPath: {0}", dllPath)
-        let private libPtr = loader.LoadLibrary(dllPath)
+        let internal libPtr = loader.LoadLibrary(dllPath)
 
         module private Delegate =
 
@@ -541,11 +541,6 @@ module NCurses =
 
             // Quasi-standard functions
 
-            let getyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getyx" 
-            let getparyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getparyx"
-            let getbegyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getbegyx"
-            let getmaxyx = Platform.getDelegate<WinPtr_CIntRef_CIntRef_CVoid> loader libPtr "getmaxyx"
-            let getsyx = Platform.getDelegate<CIntRef_CIntRef_CVoid> loader libPtr "getsyx"
             let setsyx = Platform.getDelegate<CInt_CInt_CVoid> loader libPtr "setsyx"
             let getbegx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getbegx"
             let getbegy = Platform.getDelegate<WinPtr_CInt> loader libPtr "getbegy"
@@ -555,20 +550,6 @@ module NCurses =
             let getpary = Platform.getDelegate<WinPtr_CInt> loader libPtr "getpary"
             let getcurx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getcurx"
             let getcury = Platform.getDelegate<WinPtr_CInt> loader libPtr "getcury"
-
-        // Imported variable getters
-
-        let LINES () = Platform.getCInt loader libPtr "LINES"
-        let COLS () = Platform.getCInt loader libPtr "COLS"
-        let stdscr () = Platform.getWinPtr loader libPtr "stdscr"
-        let curscr () = Platform.getWinPtr loader libPtr "curscr"
-        let SP () = Platform.getScrPtr loader libPtr "SP"
-        let Mouse_status () = Platform.getMOUSE_STATUS loader libPtr "MOUSE_STATUS"
-        let COLORS () = Platform.getCInt loader libPtr "COLORS"
-        let COLOR_PAIRS () = Platform.getCInt loader libPtr "COLOR_PAIRS"
-        let TABSIZE () = Platform.getCInt loader libPtr "TABSIZE"
-        let acs_map () = Platform.getChTypeArray loader libPtr "acs_map"
-        let ttytype () = Platform.getCCharArray loader libPtr "ttytype"
 
         // Wrapped delegates
 
@@ -697,7 +678,6 @@ module NCurses =
         let mvinsnstr y x str n = Delegate.mvinsnstr.Invoke(y, x, str, n)
         let mvinsstr y x str = Delegate.mvinsstr.Invoke(y, x, str)
         //let mvinstr = Delegate.mvinstr.Invoke() // <CInt_CInt_CCharPtr_CInt>
-        //let mvprintw = Delegate.mvprintw.Invoke() // <CInt_CInt_CCharPtr_Args_CInt>
         //let mvscanw = Delegate.mvscanw.Invoke() // <CInt_CInt_CCharPtr_Args_CInt>
         let mvvline y x ch n = Delegate.mvvline.Invoke(y, x, ch, n)
         let mvwaddchnstr win y x chstr n = Delegate.mvwaddchnstr.Invoke(win, y, x, chstr, n)
@@ -720,7 +700,6 @@ module NCurses =
         let mvwinsstr win y x str = Delegate.mvwinsstr.Invoke(win, y, x, str)
         //let mvwinstr = Delegate.mvwinstr.Invoke() // <WinPtr_CInt_CInt_CCharPtr_CInt>
         let mvwin win y x = Delegate.mvwin.Invoke(win y x)
-        //let mvwprintw = Delegate.mvwprintw.Invoke() // <WinPtr_CInt_CInt_CCharPtr_Args_CInt>
         //let mvwscanw = Delegate.mvwscanw.Invoke() // <WinPtr_CInt_CInt_CCharPtr_Args_CInt>
         let mvwvline win y x ch n = Delegate.mvwvline.Invoke(win, y, x, ch, n)
         let napms ms = Delegate.napms.Invoke(ms)
@@ -746,7 +725,6 @@ module NCurses =
         let pechochar pad ch = Delegate.pechochar.Invoke(pad, ch)
         let pnoutrefresh pad pminrow pmincol sminrow smincol smaxrow smaxcol = Delegate.pnoutrefresh.Invoke(pad, pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
         let prefresh pad pminrow pmincol sminrow smincol smaxrow smaxcol = Delegate.prefresh.Invoke(pad, pminrow, pmincol, sminrow, smincol, smaxrow, smaxcol)
-        //let printw = Delegate.printw.Invoke() // <CCharPtr_Args_CInt>
         let putwin win filep = Delegate.putwin.Invoke(win, filep)
         let qiflush () = Delegate.qiflush.Invoke()
         let raw () = Delegate.raw.Invoke()
@@ -802,8 +780,6 @@ module NCurses =
         //let vidputs = Delegate.vidputs.Invoke() // <ChType_f_CInt_CInt>
         //let vid_puts = Delegate.vid_puts.Invoke() // <Attr_t_CShort_CVoidPtr_CInt_f_CInt_CInt_CInt>
         let vline ch n = Delegate.vline.Invoke(ch, n)
-        //let vw_printw = Delegate.vw_printw.Invoke() // <WinPtr_CCharPtr_CVAList_CInt>
-        //let vwprintw = Delegate.vwprintw.Invoke() // <WinPtr_CCharPtr_CVAList_CInt>
         //let vw_scanw = Delegate.vw_scanw.Invoke() // <WinPtr_CCharPtr_CVAList_CInt>
         //let vwscanw = Delegate.vwscanw.Invoke() // <WinPtr_CCharPtr_CVAList_CInt>
         let waddchnstr win chstr n = Delegate.waddchnstr.Invoke(win, chstr, n)
@@ -852,7 +828,6 @@ module NCurses =
         //let winstr = Delegate.winstr.Invoke() // <WinPtr_CCharPtr_CInt>
         let wmove win y x = Delegate.wmove.Invoke(win, y, x)
         let wnoutrefresh win = Delegate.wnoutrefresh.Invoke(win)
-        //let wprintw = Delegate.wprintw.Invoke() // <WinPtr_CCharPtr_Args_CInt>
         let wredrawln win beg_line num_lines = Delegate.wredrawln.Invoke(win, beg_line, num_lines)
         let wrefresh win = Delegate.wrefresh.Invoke(win)
         //let wscanw = Delegate.wscanw.Invoke() // <WinPtr_CCharPtr_Args_CInt>
@@ -865,31 +840,8 @@ module NCurses =
         let wtimeout win delay = Delegate.wtimeout.Invoke(win, delay)
         let wtouchln win y n changed = Delegate.wtouchln.Invoke(win, y, n, changed)
         let wvline win ch n = Delegate.wvline.Invoke(win, ch, n)
-        let getyx win =
-            let mutable y = 0s
-            let mutable x = 0s
-            Delegate.getyx.Invoke(win, &y, &x)
-            y,x
-        let getparyx win =
-            let mutable y = 0s
-            let mutable x = 0s
-            Delegate.getparyx.Invoke(win, &y, &x)
-            y,x
-        let getbegyx win =
-            let mutable y = 0s
-            let mutable x = 0s
-            Delegate.getbegyx.Invoke(win, &y, &x)
-            y,x
-        let getmaxyx win =
-            let mutable y = 0s
-            let mutable x = 0s
-            Delegate.getmaxyx.Invoke(win, &y, &x)
-            y,x
-        let getsyx () =
-            let mutable y = 0s
-            let mutable x = 0s
-            Delegate.getsyx.Invoke(&y, &x)
-            y,x
+
+
         let setsyx y x = Delegate.setsyx.Invoke(y, x)
         let getbegx win = Delegate.getbegx.Invoke(win)
         let getbegy win = Delegate.getbegy.Invoke(win)
@@ -899,6 +851,28 @@ module NCurses =
         let getpary win = Delegate.getpary.Invoke(win)
         let getcurx win = Delegate.getcurx.Invoke(win)
         let getcury win = Delegate.getcury.Invoke(win)
+        let getyx win =
+            let y = getcury win
+            let x = getcurx win
+            y,x
+        let getparyx win =
+            let y = getpary win
+            let x = getparx win
+            y,x
+        let getbegyx win =
+            let y = getbegy win
+            let x = getbegx win
+            y,x
+        let getmaxyx win =
+            let y = getmaxy win
+            let x = getmaxx win
+            y,x
+
+// TODO: getsyx: use curscr struct from env?
+//        let getsyx () =
+//            if curscr._leaveit
+//            then -1s,-1s
+//            else getyx curscr
 
     module Check =
 
@@ -922,6 +896,22 @@ module NCurses =
             | Some x -> Result.result x
             | _ -> Result.error (sprintf "%s returned none" fname)
 
+    // Variable getters
+
+    let LINES () = Platform.getCInt Imported.loader Imported.libPtr "LINES"
+    let COLS () = Platform.getCInt Imported.loader Imported.libPtr "COLS"
+    let stdscr () = Platform.getWinPtr Imported.loader Imported.libPtr "stdscr"
+    let curscr () = Platform.getWinPtr Imported.loader Imported.libPtr "curscr"
+    let SP () = Platform.getScrPtr Imported.loader Imported.libPtr "SP"
+    //let Mouse_status = Platform.getMOUSE_STATUS loader libPtr "MOUSE_STATUS"
+    let COLORS () = Platform.getCInt Imported.loader Imported.libPtr "COLORS"
+    let COLOR_PAIRS () = Platform.getCInt Imported.loader Imported.libPtr "COLOR_PAIRS"
+    let TABSIZE () = Platform.getCInt Imported.loader Imported.libPtr "TABSIZE"
+    //let acs_map = Platform.getChTypeArray loader libPtr "acs_map"
+    //let ttytype = Platform.getCCharArray loader libPtr "ttytype"
+
+    // Functions
+
     let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
     // TODO: getch incompatible with windows? use wgetch instead
     let getch () = raise <| NotImplementedException()
@@ -932,3 +922,22 @@ module NCurses =
     let endwin () = Imported.endwin() |> Check.cintResult "endwin"
     let getmaxyx win = Imported.getmaxyx win |> Result.result
     let getstr () = Imported.getstr() |> Check.optionResult "getstr"
+    let move y x = Imported.move y x |> Check.unitResult "move"
+    let wmove win y x = Imported.wmove win y x |> Check.unitResult "move"      
+    let waddstr win str = Imported.waddstr win str |> Check.unitResult "waddstr"
+    let vwprintw win fmt = Printf.kprintf id fmt >> waddstr win
+    let printw fmt = stdscr () |> vwprintw
+    let wprintw win fmt = vwprintw win fmt
+    let mvprintw y x fmt =
+        fun args ->
+            ncurses {
+                do! move y x
+                return! vwprintw (stdscr ()) fmt args
+            }
+    let mvwprintw win y x fmt =
+        fun args ->
+            ncurses {
+                do! wmove win y x
+                return! vwprintw win fmt args
+            }
+    let vw_printw win fmt = vwprintw win fmt
