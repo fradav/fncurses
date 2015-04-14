@@ -2,8 +2,6 @@
 
 module Example =
 
-    // Book
-
     let greetings () =
         ncurses {
             do! "Greetings from fncurses!".ToCharArray() 
@@ -14,9 +12,6 @@ module Example =
                         do! napms 100s
                     })
         }
-
-    // TODO: stdscr passed in as part of env?
-    // TODO: LINES passed in as part of env?
 
     let stringinputoutput () =
         ncurses {
@@ -146,7 +141,6 @@ module Example =
 let run f =
     ncurses {
         let! win = initscr ()
-        // TODO: set the environment variables when initscr is called or just use getter per variable?
         do! f ()
         let! ch = wgetch win
         return! endwin ()
@@ -165,6 +159,8 @@ let run f =
 //            do! loop ()
 //            return! endwin ()
 //        }
+
+// TODO: set the environment variables when initscr is called or just use getter per variable?
 
 [<EntryPoint>]
 let main argv =
