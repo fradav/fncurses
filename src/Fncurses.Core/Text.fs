@@ -5,10 +5,11 @@
 
 module Text =
 
+    open ExtCore
+    open Microsoft.FSharp.Reflection
     open System
     open System.Text
     open System.Text.RegularExpressions
-    open Microsoft.FSharp.Reflection
 
     let check f x = 
         if f x 
