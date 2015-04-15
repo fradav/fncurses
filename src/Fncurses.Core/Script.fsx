@@ -106,7 +106,7 @@ let sscanf (pf:PrintfFormat<_,_,_,_,'t>) s : 't =
   else FSharpValue.MakeTuple(matches, typeof<'t>) :?> 't
 
 // some basic testing
-let (a,b) = sscanf "(%%%s,%M)" "(%hello, 4.a3)"
+let (a,b) = sscanf "(%%%s,%M)" "(%hello, 4.3)"
 let (x,y,z) = sscanf "%s-%s-%s" "test-this-string"
 let (c,d,e,f,g,h,i) = sscanf "%b-%d-%i,%u,%x,%X,%o" "false-42--31,13,ff,FF,42"
 let (j,k,l,m,n,o,p) = sscanf "%f %F %g %G %e %E %c" "1 2.1 3.4 .3 43.2e32 0 f"
@@ -149,3 +149,5 @@ let (j,k,l,m,n,o,p) = sscanf "%f %F %g %G %e %E %c" "1 2.1 3.4 .3 43.2e32 0 f"
 // memory
 // http://stackoverflow.com/questions/12273961/release-unmanaged-memory-from-managed-c-sharp-with-pointer-of-it
 // http://stackoverflow.com/questions/11508260/passing-stringbuilder-to-dll-function-expecting-char-pointer
+
+// ExtCore Control: add as a paket file reference

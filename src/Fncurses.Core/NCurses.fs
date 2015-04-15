@@ -37,7 +37,7 @@ module NCurses =
     [<AutoOpen>]
     module Types =
        
-        type ChType = System.UInt32
+        type ChType = System.UInt32 // TODO: pdcurses is ok with 32 bit chtype, but mac and nix?
         type Args = obj array
         type Attr_t = ChType
         type CBool = bool
@@ -56,8 +56,6 @@ module NCurses =
 
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type Attr_t_CShort_CVoidPtr_CInt = delegate of Attr_t * CShort * CVoidPtr -> CInt
-        //[<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        //type Attr_t_CShort_CVoidPtr_CInt_f_CInt_CInt_CInt = delegate of Attr_t * CShort * CVoidPtr * CInt * f * CInt * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type Attr_t_CVoidPtr_CInt = delegate of Attr_t * CVoidPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -88,8 +86,6 @@ module NCurses =
         type ChType_CInt_CInt = delegate of ChType * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type ChType_CVoid = delegate of ChType -> CVoid
-        //[<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        //type ChType_f_CInt_CInt = delegate of ChType * f * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type ChTypePtr_CInt = delegate of ChTypePtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -134,8 +130,6 @@ module NCurses =
         type CInt_CInt_WinPtr = delegate of CInt * CInt -> WinPtr
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CInt_CVoid = delegate of CInt -> CVoid
-        //[<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        //type CInt_f_CInt_WinPtr_CInt_CInt = delegate of CInt * f * CInt * WinPtr * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CIntRef_CIntRef_CVoid = delegate of CInt byref * CInt byref -> CVoid
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -192,16 +186,12 @@ module NCurses =
         type WinPtr_CCharPtr_CInt = delegate of WinPtr * CCharPtr -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CCharPtr_CInt_CInt = delegate of WinPtr * CCharPtr * CInt -> CInt
-        //[<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        //type WinPtr_CCharPtr_valist_CInt = delegate of WinPtr * CCharPtr * valist -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_ChType = delegate of WinPtr -> ChType
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_ChType_ChType_ChType_ChType_ChType_ChType_ChType_ChType_CInt = delegate of WinPtr * ChType * ChType * ChType * ChType * ChType * ChType * ChType * ChType -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_ChType_ChType_CInt = delegate of WinPtr * ChType * ChType -> CInt
-        //[<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        //type WinPtr_ChType_CInt = delegate of WinPtr * ChType -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_ChType_CInt_CInt = delegate of WinPtr * ChType * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -273,7 +263,6 @@ module NCurses =
                 (fun () -> Platform.macLibraryPath "libncurses.dylib") 
                 (fun () -> Platform.nixLibraryPath "libncurses.dylib") 
                 (fun () -> Platform.winLibraryPath "pdcurses.dll")
-        System.Console.WriteLine("dllPath: {0}", dllPath)
         let internal libPtr = loader.LoadLibrary(dllPath)
 
         module private Delegate =
@@ -906,13 +895,92 @@ module NCurses =
     //let acs_map = Platform.getChTypeArray loader libPtr "acs_map"
     //let ttytype = Platform.getCCharArray loader libPtr "ttytype"
 
+    // Helpers
+
+    let toChType (ch:char) = Convert.ToUInt32 ch
+    let toCChar_t (ch:char) = Convert.ToUInt32 ch
+            
+    // ----------------------------------------------------------------------
     // Functions
+
+    // addch
+        
+    let addch (ch:char) = Imported.addch (toChType ch) |> Check.unitResult "addch"
+    let waddch win (ch:char) = Imported.waddch win (toChType ch) |> Check.unitResult "waddch"
+    let mvaddch y x (ch:char) = Imported.mvaddch y x (toChType ch) |> Check.unitResult "mvaddch"
+    let mvwaddch win y x (ch:char) = Imported.mvwaddch win y x (toChType ch) |> Check.unitResult "mvwaddch"
+    let echochar (ch:char) = Imported.echochar (toChType ch) |> Check.unitResult "echochar"
+    let wechochar win (ch:char) = Imported.wechochar win (toChType ch) |> Check.unitResult "wechochar"
+
+    // addchstr
+
+    let addchstr str = Imported.addchstr str |> Check.unitResult "addchstr"
+    let addchnstr str n = Imported.addchnstr str n |> Check.unitResult "addchnstr"
+    let waddchstr win str = Imported.waddchstr win str |> Check.unitResult "waddchstr"
+    let waddchnstr win str n = Imported.waddchnstr win str n |> Check.unitResult "waddchnstr"
+    let mvaddchstr y x str = Imported.mvaddchstr y x str |> Check.unitResult "mvaddchstr"
+    let mvaddchnstr y x str n = Imported.mvaddchnstr y x str n |> Check.unitResult "mvaddchnstr"
+    let mvwaddchstr win y x str = Imported.mvwaddchstr win y x str |> Check.unitResult "mvwaddchstr"
+    let mvwaddchnstr win y x str n = Imported.mvwaddchnstr win y x str n |> Check.unitResult "mvwaddchnstr"
+                           
+    // addstr
+
+    let addstr str = Imported.addstr str |> Check.unitResult "addstr"
+    let addnstr str n = Imported.addnstr str n |> Check.unitResult "addnstr"
+    let waddstr win str = Imported.waddstr win str |> Check.unitResult "waddstr"
+    let waddnstr win str n = Imported.waddnstr win str n |> Check.unitResult "waddnstr"
+    let mvaddstr y x str = Imported.mvaddstr y x str |> Check.unitResult "mvaddstr"
+    let mvaddnstr y x str n = Imported.mvaddnstr y x str n |> Check.unitResult "mvaddnstr"
+    let mvwaddstr win y x str = Imported.mvwaddstr win y x str |> Check.unitResult "mvwaddstr"
+    let mvwaddnstr win y x str n = Imported.mvwaddnstr win y x str n |> Check.unitResult "mvwaddnstr"
+
+    // attr
+
+    let attroff attrs = Imported.attroff attrs |> Check.unitResult "attroff"
+    let wattroff win attrs = Imported.wattroff win attrs |> Check.unitResult "wattroff"
+    let attron attrs = Imported.attron attrs |> Check.unitResult "attron"
+    let wattron win attrs = Imported.wattron win attrs |> Check.unitResult "wattron"
+    let attrset attrs = Imported.attrset attrs |> Check.unitResult "attrset"
+    let wattrset win attrs = Imported.wattrset win attrs |> Check.unitResult "wattrset"
+    let standend () = Imported.standend () |> Check.unitResult "standend"
+    let wstandend win = Imported.wstandend win |> Check.unitResult "wstandend"
+    let standout () = Imported.standout () |> Check.unitResult "standout"
+    let wstandout win = Imported.wstandout win |> Check.unitResult "wstandout"
+
+    // beep
+
+    let beep () = Imported.beep () |> Check.unitResult "beep"
+    let flash () = Imported.flash () |> Check.unitResult "flash"
+
+    // bkgd
+
+    let bkgd (ch:char) = Imported.bkgd (toChType ch) |> Check.unitResult "bkgd"
+    let bkgdset (ch:char) = Imported.bkgdset (toChType ch) |> Result.result
+    let getbkgd win = Imported.getbkgd win |> Result.result
+    let wbkgd win (ch:char) = Imported.wbkgd win (toChType ch) |> Check.unitResult "wbkgd"
+    let wbkgdset win (ch:char) = Imported.wbkgdset win (toChType ch) |> Result.result
+
+    // border
+
+    let border chtype ls, chtype rs, chtype ts, chtype bs, chtype tl, chtype tr, chtype bl, chtype br = Imported.border |> Check.unitResult "border"
+    let wborder WINDOW *win, chtype ls, chtype rs, chtype ts, chtype bs, chtype tl, chtype tr, chtype bl, chtype br = Imported.wborder |> Check.unitResult "wborder"
+    let box WINDOW *win, chtype verch, chtype horch = Imported.box |> Check.unitResult "box"
+    let hline chtype ch, int n = Imported.hline |> Check.unitResult "hline"
+    let vline chtype ch, int n = Imported.vline |> Check.unitResult "vline"
+    let whline WINDOW *win, chtype ch, int n = Imported.whline |> Check.unitResult "whline"
+    let wvline WINDOW *win, chtype ch, int n = Imported.wvline |> Check.unitResult "wvline"
+    let mvhline int y, int x, chtype ch, int n = Imported.mvhline |> Check.unitResult "mvhline"
+    let mvvline int y, int x, chtype ch, int n = Imported.mvvline |> Check.unitResult "mvvline"
+    let mvwhline WINDOW *win, int y, int x, chtype ch, int n = Imported.mvwhline |> Check.unitResult "mvwhline"
+    let mvwvline WINDOW *win, int y, int x, chtype ch, int n = Imported.mvwvline |> Check.unitResult "mvwvline"
+
+
+
 
     let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
     // TODO: getch incompatible with windows? use wgetch instead
     let getch () = raise <| NotImplementedException()
     let wgetch win = Imported.wgetch(win) |> Check.cintResult "wgetch"
-    let addch (ch:char) = Imported.addch(System.Convert.ToUInt32 ch) |> Check.unitResult "addch"
     let napms ms = Imported.napms(ms) |> Check.unitResult "napms"
     let refresh () = Imported.refresh() |> Check.unitResult "refresh"
     let endwin () = Imported.endwin() |> Check.cintResult "endwin"
