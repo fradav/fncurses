@@ -905,12 +905,12 @@ module NCurses =
 
     // addch
         
-    let addch (ch:char) = Imported.addch (toChType ch) |> Check.unitResult "addch"
-    let waddch win (ch:char) = Imported.waddch win (toChType ch) |> Check.unitResult "waddch"
-    let mvaddch y x (ch:char) = Imported.mvaddch y x (toChType ch) |> Check.unitResult "mvaddch"
-    let mvwaddch win y x (ch:char) = Imported.mvwaddch win y x (toChType ch) |> Check.unitResult "mvwaddch"
-    let echochar (ch:char) = Imported.echochar (toChType ch) |> Check.unitResult "echochar"
-    let wechochar win (ch:char) = Imported.wechochar win (toChType ch) |> Check.unitResult "wechochar"
+    let addch ch = Imported.addch (toChType ch) |> Check.unitResult "addch"
+    let waddch win ch = Imported.waddch win (toChType ch) |> Check.unitResult "waddch"
+    let mvaddch y x ch = Imported.mvaddch y x (toChType ch) |> Check.unitResult "mvaddch"
+    let mvwaddch win y x ch = Imported.mvwaddch win y x (toChType ch) |> Check.unitResult "mvwaddch"
+    let echochar ch = Imported.echochar (toChType ch) |> Check.unitResult "echochar"
+    let wechochar win ch = Imported.wechochar win (toChType ch) |> Check.unitResult "wechochar"
 
     // addchstr
 
@@ -954,28 +954,60 @@ module NCurses =
 
     // bkgd
 
-    let bkgd (ch:char) = Imported.bkgd (toChType ch) |> Check.unitResult "bkgd"
-    let bkgdset (ch:char) = Imported.bkgdset (toChType ch) |> Result.result
+    let bkgd ch = Imported.bkgd (toChType ch) |> Check.unitResult "bkgd"
+    let bkgdset ch = Imported.bkgdset (toChType ch) |> Result.result
     let getbkgd win = Imported.getbkgd win |> Result.result
-    let wbkgd win (ch:char) = Imported.wbkgd win (toChType ch) |> Check.unitResult "wbkgd"
-    let wbkgdset win (ch:char) = Imported.wbkgdset win (toChType ch) |> Result.result
+    let wbkgd win ch = Imported.wbkgd win (toChType ch) |> Check.unitResult "wbkgd"
+    let wbkgdset win ch = Imported.wbkgdset win (toChType ch) |> Result.result
 
     // border
 
-    let border chtype ls, chtype rs, chtype ts, chtype bs, chtype tl, chtype tr, chtype bl, chtype br = Imported.border |> Check.unitResult "border"
-    let wborder WINDOW *win, chtype ls, chtype rs, chtype ts, chtype bs, chtype tl, chtype tr, chtype bl, chtype br = Imported.wborder |> Check.unitResult "wborder"
-    let box WINDOW *win, chtype verch, chtype horch = Imported.box |> Check.unitResult "box"
-    let hline chtype ch, int n = Imported.hline |> Check.unitResult "hline"
-    let vline chtype ch, int n = Imported.vline |> Check.unitResult "vline"
-    let whline WINDOW *win, chtype ch, int n = Imported.whline |> Check.unitResult "whline"
-    let wvline WINDOW *win, chtype ch, int n = Imported.wvline |> Check.unitResult "wvline"
-    let mvhline int y, int x, chtype ch, int n = Imported.mvhline |> Check.unitResult "mvhline"
-    let mvvline int y, int x, chtype ch, int n = Imported.mvvline |> Check.unitResult "mvvline"
-    let mvwhline WINDOW *win, int y, int x, chtype ch, int n = Imported.mvwhline |> Check.unitResult "mvwhline"
-    let mvwvline WINDOW *win, int y, int x, chtype ch, int n = Imported.mvwvline |> Check.unitResult "mvwvline"
+    let border ls rs ts bs tl tr bl br = Imported.border (toChType ls) (toChType rs) (toChType ts) (toChType bs) (toChType tl) (toChType tr) (toChType bl) (toChType br) |> Check.unitResult "border"
+    let wborder win ls rs ts bs tl tr bl br = Imported.wborder win (toChType ls) (toChType rs) (toChType ts) (toChType bs) (toChType tl) (toChType tr) (toChType bl) (toChType br) |> Check.unitResult "wborder"
+    let box win verch horch = Imported.box win (toChType verch) (toChType horch) |> Check.unitResult "box"
+    let hline ch n = Imported.hline (toChType ch) n |> Check.unitResult "hline"
+    let vline ch n = Imported.vline (toChType ch) n |> Check.unitResult "vline"
+    let whline win ch n = Imported.whline win (toChType ch) n |> Check.unitResult "whline"
+    let wvline win ch n = Imported.wvline win (toChType ch) n |> Check.unitResult "wvline"
+    let mvhline y x ch n = Imported.mvhline y x (toChType ch) n |> Check.unitResult "mvhline"
+    let mvvline y x ch n = Imported.mvvline y x (toChType ch) n |> Check.unitResult "mvvline"
+    let mvwhline win y x ch n = Imported.mvwhline win y x (toChType ch) n |> Check.unitResult "mvwhline"
+    let mvwvline win y x ch n = Imported.mvwvline win y x (toChType ch) n |> Check.unitResult "mvwvline"
 
+    // clear
 
+    let clear () = Imported.clear () |> Check.unitResult "clear"
+    let wclear win = Imported.wclear win |> Check.unitResult "wclear"
+    let erase () = Imported.erase () |> Check.unitResult "erase"
+    let werase win = Imported.werase win |> Check.unitResult "werase"
+    let clrtobot () = Imported.clrtobot () |> Check.unitResult "clrtobot"
+    let wclrtobot win = Imported.wclrtobot win |> Check.unitResult "wclrtobot"
+    let clrtoeol () = Imported.clrtoeol () |> Check.unitResult "clrtoeol"
+    let wclrtoeol win = Imported.wclrtoeol win |> Check.unitResult "wclrtoeol"
 
+    // color
+
+    let start_color () = Imported.start_color () |> Check.unitResult "start_color"
+    let init_pair pair fg bg = Imported.init_pair pair fg bg |> Check.unitResult "init_pair"
+    let init_color color red green blue = Imported.init_color red green blue |> Check.unitResult "init_color"
+    let has_colors () = Imported.has_colors () |> Result.result
+    let can_change_color () = Imported.can_change_color () |> Result.result
+    let color_content color = Imported.color_content color |> Check.optionResult "color_content"
+    let pair_content pair = Imported.pair_content pair |> Check.optionResult "pair_content"
+        
+    // debug
+
+	void traceon(void);
+	void traceoff(void);
+	void PDC_debug(const char *, ...);
+
+    // delch
+
+	int delch(void);
+	int wdelch(WINDOW *win);
+	int mvdelch(int y, int x);
+	int mvwdelch(WINDOW *win, int y, int x);
+        
 
     let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
     // TODO: getch incompatible with windows? use wgetch instead
