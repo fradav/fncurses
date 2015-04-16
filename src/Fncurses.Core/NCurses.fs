@@ -329,8 +329,8 @@ module NCurses =
             let idcok = Platform.getDelegate<WinPtr_CBool_CInt> loader libPtr "idcok"
             let idlok = Platform.getDelegate<WinPtr_CBool_CInt> loader libPtr "idlok"
             let immedok = Platform.getDelegate<WinPtr_CBool_CInt> loader libPtr "immedok"
-            let inchnstr = Platform.getDelegate<ChTypePtr_CInt_CInt> loader libPtr "inchnstr"
-            let inchstr = Platform.getDelegate<ChTypePtr_CInt> loader libPtr "inchstr"
+            let inchnstr = Platform.getDelegate<ChTypeBuf_CInt_CInt> loader libPtr "inchnstr"
+            let inchstr = Platform.getDelegate<ChTypeBuf_CInt> loader libPtr "inchstr"
             let inch = Platform.getDelegate<CVoid_ChType> loader libPtr "inch"
             let init_color = Platform.getDelegate<CShort_CShort_CShort_CShort_CInt> loader libPtr "init_color"
             let init_pair = Platform.getDelegate<CShort_CShort_CShort_CInt> loader libPtr "init_pair"
@@ -617,8 +617,8 @@ module NCurses =
         let idcok win bf = Delegate.idcok.Invoke(win, bf)
         let idlok win bf = Delegate.idlok.Invoke(win, bf)
         let immedok win bf = Delegate.immedok.Invoke(win, bf)
-        //let inchnstr = Delegate.inchnstr.Invoke() // <ChTypePtr_CInt_CInt>
-        //let inchstr = Delegate.inchstr.Invoke() // <ChTypePtr_CInt>
+        let inchnstr = Delegate.inchnstr.Invoke() // <ChTypePtr_CInt_CInt>
+        let inchstr = Delegate.inchstr.Invoke() // <ChTypePtr_CInt>
         let inch () = Delegate.inch.Invoke()
         let init_color color r g b = Delegate.init_color.Invoke(color, r, g, b)
         let init_pair pair f b = Delegate.init_pair.Invoke(pair, f, b)
@@ -1064,14 +1064,14 @@ module NCurses =
 
     // inchstr
 
-    let inchstr ch = Imported.inchstr |> Check.unitResult "inchstr"
+    let inchstr ch = Imported.inchstr ch |> Check.unitResult "inchstr"
     let inchnstr ch n = Imported.inchnstr |> Check.unitResult "inchnstr"
     let winchstr win ch = Imported.winchstr |> Check.unitResult "winchstr"
     let winchnstr win ch n = Imported.winchnstr |> Check.unitResult "winchnstr"
     let mvinchstr y x ch = Imported.mvinchstr |> Check.unitResult "mvinchstr"
     let mvinchnstr y x ch n = Imported.mvinchnstr |> Check.unitResult "mvinchnstr"
     let mvwinchstr win y x ch = Imported.mvwinchstr |> Check.unitResult "mvwinchstr"
-    let mvwinchnstr win y x ch n = Imported.mvwinchn
+    let mvwinchnstr win y x ch n = Imported.mvwinchnstr |> Check.unitResult "mvwinchstr"
                      
         
     let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
