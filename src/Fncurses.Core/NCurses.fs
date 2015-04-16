@@ -42,6 +42,7 @@ module NCurses =
         type Attr_t = ChType
         type CBool = bool
         type CChar = sbyte
+        type CCharBuf = byte array
         type CCharPtr = string
         type CChar_t = ChType
         type CFilePtr = IntPtr
@@ -69,9 +70,9 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CCharPtr_CInt_CInt = delegate of CCharPtr * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CCharBuf_CInt = delegate of byte array -> CInt
+        type CCharBuf_CInt = delegate of CCharBuf -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CCharBuf_CInt_CInt = delegate of byte array * CInt -> CInt
+        type CCharBuf_CInt_CInt = delegate of CCharBuf * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CCharPtr_CVoid = delegate of CCharPtr -> CVoid
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -103,9 +104,9 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CInt_CInt_CCharPtr_Args_CInt = delegate of CInt * CInt * CCharPtr * Args -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CInt_CInt_CCharPtr_CInt = delegate of CInt * CInt * CCharPtr -> CInt
+        type CInt_CInt_CCharBuf_CInt = delegate of CInt * CInt * CCharBuf -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type CInt_CInt_CCharPtr_CInt_CInt = delegate of CInt * CInt * CCharPtr * CInt -> CInt
+        type CInt_CInt_CCharBuf_CInt_CInt = delegate of CInt * CInt * CCharBuf * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type CInt_CInt_ChType = delegate of CInt * CInt -> ChType
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -211,9 +212,9 @@ module NCurses =
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CInt_CInt_CCharPtr_Args_CInt = delegate of WinPtr * CInt * CInt * CCharPtr * Args -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type WinPtr_CInt_CInt_CCharPtr_CInt = delegate of WinPtr * CInt * CInt * CCharPtr -> CInt
+        type WinPtr_CInt_CInt_CCharBuf_CInt = delegate of WinPtr * CInt * CInt * CCharBuf -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
-        type WinPtr_CInt_CInt_CCharPtr_CInt_CInt = delegate of WinPtr * CInt * CInt * CCharPtr * CInt -> CInt
+        type WinPtr_CInt_CInt_CCharBuf_CInt_CInt = delegate of WinPtr * CInt * CInt * CCharBuf * CInt -> CInt
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
         type WinPtr_CInt_CInt_ChType = delegate of WinPtr * CInt * CInt -> ChType
         [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
@@ -362,8 +363,8 @@ module NCurses =
             let mvdelch = Platform.getDelegate<CInt_CInt_CInt> loader libPtr "mvdelch"
             let mvderwin = Platform.getDelegate<WinPtr_CInt_CInt_CInt> loader libPtr "mvderwin"
             let mvgetch = Platform.getDelegate<CInt_CInt_CInt> loader libPtr "mvgetch"
-            let mvgetnstr = Platform.getDelegate<CInt_CInt_CCharPtr_CInt_CInt> loader libPtr "mvgetnstr"
-            let mvgetstr = Platform.getDelegate<CInt_CInt_CCharPtr_CInt> loader libPtr "mvgetstr"
+            let mvgetnstr = Platform.getDelegate<CInt_CInt_CCharBuf_CInt_CInt> loader libPtr "mvgetnstr"
+            let mvgetstr = Platform.getDelegate<CInt_CInt_CCharBuf_CInt> loader libPtr "mvgetstr"
             let mvhline = Platform.getDelegate<CInt_CInt_ChType_CInt_CInt> loader libPtr "mvhline"
             let mvinch = Platform.getDelegate<CInt_CInt_ChType> loader libPtr "mvinch"
             let mvinchnstr = Platform.getDelegate<CInt_CInt_ChTypePtr_CInt_CInt> loader libPtr "mvinchnstr"
@@ -383,8 +384,8 @@ module NCurses =
             let mvwchgat = Platform.getDelegate<WinPtr_CInt_CInt_CInt_Attr_t_CShort_CVoidPtr_CInt> loader libPtr "mvwchgat"
             let mvwdelch = Platform.getDelegate<WinPtr_CInt_CInt_CInt> loader libPtr "mvwdelch"
             let mvwgetch = Platform.getDelegate<WinPtr_CInt_CInt_CInt> loader libPtr "mvwgetch"
-            let mvwgetnstr = Platform.getDelegate<WinPtr_CInt_CInt_CCharPtr_CInt_CInt> loader libPtr "mvwgetnstr"
-            let mvwgetstr = Platform.getDelegate<WinPtr_CInt_CInt_CCharPtr_CInt> loader libPtr "mvwgetstr"
+            let mvwgetnstr = Platform.getDelegate<WinPtr_CInt_CInt_CCharBuf_CInt_CInt> loader libPtr "mvwgetnstr"
+            let mvwgetstr = Platform.getDelegate<WinPtr_CInt_CInt_CCharBuf_CInt> loader libPtr "mvwgetstr"
             let mvwhline = Platform.getDelegate<WinPtr_CInt_CInt_ChType_CInt_CInt> loader libPtr "mvwhline"
             let mvwinchnstr = Platform.getDelegate<WinPtr_CInt_CInt_ChTypePtr_CInt_CInt> loader libPtr "mvwinchnstr"
             let mvwinchstr = Platform.getDelegate<WinPtr_CInt_CInt_ChTypePtr_CInt> loader libPtr "mvwinchstr"
@@ -650,8 +651,16 @@ module NCurses =
         let mvdelch y x = Delegate.mvdelch.Invoke(y, x)
         let mvderwin win par_y par_x = Delegate.mvderwin.Invoke(win, par_y, par_x)
         let mvgetch y x = Delegate.mvgetch.Invoke(y, x)
-        //let mvgetnstr = Delegate.mvgetnstr.Invoke() // <CInt_CInt_CCharPtr_CInt_CInt>
-        //let mvgetstr = Delegate.mvgetstr.Invoke() // <CInt_CInt_CCharPtr_CInt>
+        let mvgetnstr y x (n:CInt) = 
+          let buffer = Array.zeroCreate<byte> (int n)
+          match Delegate.mvgetnstr.Invoke(y, x, buffer, n) with
+          | OK -> Some (Encoding.ASCII.GetString(buffer))
+          | _ -> None
+        let mvgetstr y x = 
+          // mvgetstr is dangerous - it can be the cause of buffer 
+          // overruns because it cannot know the size of the buffer being
+          // used. Use mvgetnstr instead which passes in the buffer size.
+          mvgetnstr y x BUFFER_SIZE
         let mvhline y x ch n = Delegate.mvhline.Invoke(y, x, ch, n)
         let mvinch y x = Delegate.mvinch.Invoke(y, x)
         //let mvinchnstr = Delegate.mvinchnstr.Invoke() // <CInt_CInt_ChTypePtr_CInt_CInt>
@@ -670,8 +679,16 @@ module NCurses =
         let mvwchgat win y x n attr color opts = Delegate.mvwchgat.Invoke(win, y, x, n, attr, color, opts)
         let mvwdelch win y x = Delegate.mvwdelch.Invoke(win, y, x)
         let mvwgetch win y x = Delegate.mvwgetch.Invoke(win, y, x)
-        //let mvwgetnstr = Delegate.mvwgetnstr.Invoke() // <WinPtr_CInt_CInt_CCharPtr_CInt_CInt>
-        //let mvwgetstr = Delegate.mvwgetstr.Invoke() // <WinPtr_CInt_CInt_CCharPtr_CInt>
+        let mvwgetnstr win y x (n:CInt) = 
+          let buffer = Array.zeroCreate<byte> (int n)
+          match Delegate.mvwgetnstr.Invoke(win, y, x, buffer, n) with
+          | OK -> Some (Encoding.ASCII.GetString(buffer))
+          | _ -> None
+        let mvwgetstr win y x = 
+          // mvwgetstr is dangerous - it can be the cause of buffer 
+          // overruns because it cannot know the size of the buffer being
+          // used. Use mvwgetnstr instead which passes in the buffer size.
+          mvwgetnstr win y x BUFFER_SIZE
         let mvwhline win y x ch n = Delegate.mvwhline.Invoke(win, y, x, ch, n)
         //let mvwinchnstr = Delegate.mvwinchnstr.Invoke() // <WinPtr_CInt_CInt_ChTypePtr_CInt_CInt>
         //let mvwinchstr = Delegate.mvwinchstr.Invoke() // <WinPtr_CInt_CInt_ChTypePtr_CInt>
@@ -995,20 +1012,68 @@ module NCurses =
     let color_content color = Imported.color_content color |> Check.optionResult "color_content"
     let pair_content pair = Imported.pair_content pair |> Check.optionResult "pair_content"
         
-    // debug
-
-	void traceon(void);
-	void traceoff(void);
-	void PDC_debug(const char *, ...);
-
     // delch
 
-	int delch(void);
-	int wdelch(WINDOW *win);
-	int mvdelch(int y, int x);
-	int mvwdelch(WINDOW *win, int y, int x);
-        
+    let delch () = Imported.delch () |> Check.unitResult "delch"
+    let wdelch win = Imported.wdelch win |> Check.unitResult "wdelch"
+    let mvdelch y x = Imported.mvdelch y x |> Check.unitResult "mvdelch"
+    let mvwdelch win y x = Imported.mvwdelch win y x |> Check.unitResult "mvwdelch"
 
+    // deleteln
+
+    let deleteln () = Imported.deleteln () |> Check.unitResult "deleteln"
+    let wdeleteln win = Imported.wdeleteln win |> Check.unitResult "wdeleteln"
+    let insdelln n = Imported.insdelln n |> Check.unitResult "insdelln"
+    let winsdelln win n = Imported.winsdelln win n |> Check.unitResult "winsdelln"
+    let insertln () = Imported.insertln () |> Check.unitResult "insertln"
+    let winsertln win = Imported.winsertln win |> Check.unitResult "winsertln"
+
+    // getch
+
+    // TODO: demacro let getch () = Imported.getch () |> Check.unitResult "getch"
+    let wgetch win = Imported.wgetch win |> Check.unitResult "wgetch"
+    let mvgetch y x = Imported.mvgetch y x |> Check.unitResult "mvgetch"
+    let mvwgetch win y x = Imported.mvwgetch win y x |> Check.unitResult "mvwgetch"
+    // TODO: demacro let ungetch ch = Imported.ungetch ch |> Check.unitResult "ungetch"
+    let flushinp () = Imported.flushinp () |> Check.unitResult "flushinp"
+    
+    // getstr
+
+    let getstr () = Imported.getstr () |> Check.optionResult "getstr"
+    let wgetstr win = Imported.wgetstr win |> Check.optionResult "wgetstr"
+    let mvgetstr y x = Imported.mvgetstr y x |> Check.optionResult "mvgetstr"
+    let mvwgetstr win y x = Imported.mvwgetstr win y x |> Check.optionResult "mvwgetstr"
+    let getnstr n = Imported.getnstr n |> Check.optionResult "getnstr"
+    let wgetnstr win n = Imported.wgetnstr win n |> Check.optionResult "wgetnstr"
+    let mvgetnstr y x n = Imported.mvgetnstr y x n |> Check.optionResult "mvgetnstr"
+    let mvwgetnstr win y x n = Imported.mvwgetnstr win y x n |> Check.optionResult "mvwgetnstr"
+
+    // getyx
+        
+    let getyx win = Imported.getyx win |> Result.result
+    let getparyx win = Imported.getparyx win |> Result.result
+    let getbegyx win = Imported.getbegyx win |> Result.result
+    let getmaxyx win = Imported.getmaxyx win |> Result.result
+
+    // inch
+
+    let inch () = Imported.inch () |> Result.result
+    let winch win = Imported.winch win |> Result.result
+    let mvinch y x = Imported.mvinch y x |> Result.result
+    let mvwinch win y x = Imported.mvwinch win y x |> Result.result
+
+    // inchstr
+
+    let inchstr ch = Imported.inchstr |> Check.unitResult "inchstr"
+    let inchnstr ch n = Imported.inchnstr |> Check.unitResult "inchnstr"
+    let winchstr win ch = Imported.winchstr |> Check.unitResult "winchstr"
+    let winchnstr win ch n = Imported.winchnstr |> Check.unitResult "winchnstr"
+    let mvinchstr y x ch = Imported.mvinchstr |> Check.unitResult "mvinchstr"
+    let mvinchnstr y x ch n = Imported.mvinchnstr |> Check.unitResult "mvinchnstr"
+    let mvwinchstr win y x ch = Imported.mvwinchstr |> Check.unitResult "mvwinchstr"
+    let mvwinchnstr win y x ch n = Imported.mvwinchn
+                     
+        
     let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
     // TODO: getch incompatible with windows? use wgetch instead
     let getch () = raise <| NotImplementedException()
