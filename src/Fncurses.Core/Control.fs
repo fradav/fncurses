@@ -817,3 +817,25 @@ module Result =
     [<CompiledName("ComposeBack")>]
     let composeBack (f : 'U -> Result<'V, 'Error>) (g : 'T -> Result<'U, 'Error>) =
         g >> (bind f)
+
+module Check =
+
+     let cptrResult fname result =
+         if result = NULL 
+         then Result.error (sprintf "%s returned NULL" fname)
+         else Result.result result
+
+     let cintResult fname result = 
+         if result = ERR
+         then Result.error (sprintf "%s returned ERR" fname)
+         else Result.result result
+
+     let unitResult fname result = 
+         if result = ERR
+         then Result.error (sprintf "%s returned ERR" fname)
+         else Result.result ()
+
+     let optionResult fname result =
+         match result with
+         | Some x -> Result.result x
+         | _ -> Result.error (sprintf "%s returned none" fname)
