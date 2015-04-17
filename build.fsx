@@ -79,6 +79,14 @@ let solution =
                           Native { Src = @"..\lib\native\windows\amd64\pdcurses.dll"
                                    Target = @"lib/native/windows/amd64" } 
                           Native { Src = @"..\lib\native\darwin\universal\libncurses.dylib"
+                                   Target = @"lib/native/darwin/universal" } ] }
+                  { Name = "Example"
+                    Dependencies = 
+                        [ Package "FSharp.Core"
+                          Local "Fncurses.Core"
+                          Native { Src = @"..\lib\native\windows\amd64\pdcurses.dll"
+                                   Target = @"lib/native/windows/amd64" } 
+                          Native { Src = @"..\lib\native\darwin\universal\libncurses.dylib"
                                    Target = @"lib/native/darwin/universal" } ] } ]
               Test = [ { Name = "Fncurses.Core.Tests" } ] } }
       VersionControl = 

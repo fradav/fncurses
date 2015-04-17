@@ -43,27 +43,27 @@ module Example =
 //            do! addstr "With the Y chromosome changed to the X."
 //            do! refresh ()
 //        }
-//
-//    let annoy () =
-//        result {
-//            let text = [|"Do"; "you"; "find"; "this"; "silly?"|]
-//            do! [|0 .. 4|]
-//                |> ResultArray.iter (fun a ->
-//                    result {
-//                        do! [|0 .. 4|]
-//                            |> ResultArray.iter (fun b ->
-//                                result {
-//                                    if b = a then do! attrset (A_BOLD ||| A_UNDERLINE)
-//                                    // TODO: do! printw "%s" text.[b]
-//                                    do! printw1 "%s" text.[b]
-//                                    if b = a then do! attroff (A_BOLD ||| A_UNDERLINE)
-//                                    do! addch ' '
-//                                })
-//                        do! addstr "\b\n"
-//                    })
-//            do! refresh ()
-//        }
-//
+
+    let annoy () =
+        ncurses {
+            let text = [|"Do"; "you"; "find"; "this"; "silly?"|]
+            do! [|0 .. 4|]
+                |> NcursesArray.iter (fun a ->
+                    ncurses {
+                        do! [|0 .. 4|]
+                            |> NcursesArray.iter (fun b ->
+                                ncurses {
+                                    if b = a then do! attrset (A_BOLD ||| A_UNDERLINE)
+                                    // TODO: do! printw "%s" text.[b]
+                                    do! printw "%s" text.[b]
+                                    if b = a then do! attroff (A_BOLD ||| A_UNDERLINE)
+                                    do! addch ' '
+                                })
+                        do! addstr "\b\n"
+                    })
+            do! refresh ()
+        }
+
 //    let arrowKeys (ch:int) =
 //        result {
 //            do!
@@ -164,7 +164,7 @@ let run f =
 
 [<EntryPoint>]
 let main argv =
-    match run Example.helloworld with
+    match run Example.annoy with
     | Success _ -> 
         0
     | Failure reason -> printfn "%s" reason; 1
