@@ -175,9 +175,6 @@ Target "Publish.MetaPackage" (fun _ ->
                 solution.Structure.Projects.Source
                 |> List.map (fun project -> project.Name, nugetVersion)
             Description = solution.Metadata.Description
-            Files =
-                solution.Structure.Projects.Source
-                |> List.collect nativeFiles
             OutputPath = "bin"
             Project = solution.Name
             Publish = hasBuildParam "nugetkey"
