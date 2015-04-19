@@ -275,7 +275,7 @@ module Imported =
 
         // Quasi-standard functions
 
-        let setsyx = Platform.getDelegate<CInt_CInt_CVoid> loader libPtr "setsyx"
+//        let setsyx = Platform.getDelegate<CInt_CInt_CVoid> loader libPtr "setsyx"
         let getbegx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getbegx"
         let getbegy = Platform.getDelegate<WinPtr_CInt> loader libPtr "getbegy"
         let getmaxx = Platform.getDelegate<WinPtr_CInt> loader libPtr "getmaxx"
@@ -592,7 +592,7 @@ module Imported =
     let wvline win ch n = Delegate.wvline.Invoke(win, ch, n)
 
 
-    let setsyx y x = Delegate.setsyx.Invoke(y, x)
+//    let setsyx y x = Delegate.setsyx.Invoke(y, x)
     let getbegx win = Delegate.getbegx.Invoke(win)
     let getbegy win = Delegate.getbegy.Invoke(win)
     let getmaxx win = Delegate.getmaxx.Invoke(win)

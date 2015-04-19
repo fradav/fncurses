@@ -14,8 +14,7 @@ open System.IO
 // --------------------------------------------------------------------------------------
 // Types
 //
-// Copied from https://github.com/freya-fs/freya/blob/master/build.fsx and extended to
-// support native libraries.
+// Copied from https://github.com/freya-fs/freya/blob/master/build.fsx
 // --------------------------------------------------------------------------------------
 
 type Solution = 
@@ -45,7 +44,6 @@ and SourceProject =
 and Dependency =
     | Package of string
     | Local of string
-    | Native of NativeDependency
 and TestProject = 
     { Name: string }
 and VersionControl = 
@@ -53,9 +51,6 @@ and VersionControl =
       Name: string 
       Source: string
       Raw: string }
-and NativeDependency =
-    { Src : string
-      Target : string }
 
 // --------------------------------------------------------------------------------------
 // Solution
@@ -75,19 +70,11 @@ let solution =
             { Source = 
                 [ { Name = "Fncurses.Core"
                     Dependencies = 
-                        [ Package "FSharp.Core"
-                          Native { Src = @"..\lib\native\windows\amd64\pdcurses.dll"
-                                   Target = @"lib/native/windows/amd64" } 
-                          Native { Src = @"..\lib\native\darwin\universal\libncurses.dylib"
-                                   Target = @"lib/native/darwin/universal" } ] }
+                        [ Package "FSharp.Core" ] }
                   { Name = "Example"
                     Dependencies = 
                         [ Package "FSharp.Core"
-                          Local "Fncurses.Core"
-                          Native { Src = @"..\lib\native\windows\amd64\pdcurses.dll"
-                                   Target = @"lib/native/windows/amd64" } 
-                          Native { Src = @"..\lib\native\darwin\universal\libncurses.dylib"
-                                   Target = @"lib/native/darwin/universal" } ] } ]
+                          Local "Fncurses.Core" ] } ]
               Test = [ { Name = "Fncurses.Core.Tests" } ] } }
       VersionControl = 
         { Owner = "simontcousins"
@@ -124,11 +111,6 @@ let dependencies (x: SourceProject) =
                              | Local x -> Some (x, nugetVersion)
                              | _ -> None)
 
-let nativeFiles (x: SourceProject) =
-    x.Dependencies 
-    |> List.choose (function | Native file -> Some (file.Src, Some file.Target, None)
-                             | _ -> None)
-
 let extensions =
     [ 
         "dll"
@@ -143,8 +125,7 @@ let files (x: SourceProject) =
             sprintf @"..\bin\%s.%s" x.Name ext,
             Some "lib/net45", 
             None)
-    let native = nativeFiles x
-    let all = managed @ native
+    let all = managed
     trace (sprintf "files = %A" all)
     all
 
@@ -238,8 +219,8 @@ Target "Source.AssemblyInfo" (fun _ ->
             ]))
 
 Target "Source.Build" (fun _ ->
-    build (fun x ->
-        { x with
+    build (fun parameters ->
+        { parameters with
             Properties =
                 [ 
                     "Optimize",      environVarOrDefault "Build.Optimize"      "True"
@@ -250,13 +231,14 @@ Target "Source.Build" (fun _ ->
                 [ 
                     "Build" 
                 ]
-            Verbosity = Some Quiet 
+            Verbosity = Some Normal 
         }) solution.Structure.Solution)
 
+Target "Libs.CopyNative" (fun _ ->
+    CopyRecursive "lib" "bin/lib" true |> tracefn "%A")
+
 Target "Source.Clean" (fun _ ->
-    CleanDirs [
-        "bin"
-        "temp" ])
+    CleanDirs [ "bin"; "temp" ])
 
 Target "Source.Test" (fun _ ->
     try
@@ -414,6 +396,7 @@ Target "Publish" DoNothing
 ==> "Source.Build"
 ==> "Source.Test"
 ==> "Source"
+==> "Libs.CopyNative"
 =?> ("GenerateReferenceDocs",isLocalBuild && not isMono)
 =?> ("GenerateDocs",isLocalBuild && not isMono)
 ==> "Default"
