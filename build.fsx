@@ -382,8 +382,8 @@ Target "Publish" DoNothing
 "Source"
 #if MONO
 #else
-==> "Publish.Debug"
-==> "Publish.Packages"
+//==> "Publish.Debug"
+//==> "Publish.Packages"
 //==> "Publish.MetaPackage"
 #endif
 ==> "Publish"
