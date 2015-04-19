@@ -2,7 +2,7 @@
 
 fncurses is an F# wrapper for the ncurses native library.
 
-## Building
+## Build
 
 - Build fncurses using the use the FAKE script:
   * On Windows run: *build.cmd* 
