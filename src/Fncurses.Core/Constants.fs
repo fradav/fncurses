@@ -33,7 +33,7 @@ module Constants =
     // https://github.com/D-Programming-Deimos/ncurses/blob/master/deimos/ncurses/curses.d
         
     let A_NORMAL     = 1u - 1u
-    let A_STANDOUT   = 1u <<< (9 + 8)
+    let A_STANDOUT   = 1u <<< (8 + 8)
     let A_UNDERLINE  = 1u <<< (9 + 8)
     let A_REVERSE    = 1u <<< (10 + 8)
     let A_BLINK      = 1u <<< (11 + 8)
