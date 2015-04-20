@@ -36,7 +36,6 @@ module Constants =
     let NCURSES_BITS mask shift = mask <<< (shift + NCURSES_ATTR_SHIFT)
         
     let A_NORMAL     = 1u - 1u
-
     let A_STANDOUT   = NCURSES_BITS 1u  8
     let A_UNDERLINE  = NCURSES_BITS 1u  9
     let A_REVERSE    = NCURSES_BITS 1u 10
@@ -46,12 +45,6 @@ module Constants =
     let A_ALTCHARSET = NCURSES_BITS 1u 14
     let A_INVIS      = NCURSES_BITS 1u 15
     let A_PROTECT    = NCURSES_BITS 1u 16
-    let A_HORIZONTAL = NCURSES_BITS 1u 17
-    let A_LEFT       = NCURSES_BITS 1u 18
-    let A_LOW        = NCURSES_BITS 1u 19
-    let A_RIGHT      = NCURSES_BITS 1u 20
-    let A_TOP        = NCURSES_BITS 1u 21
-    let A_VERTICAL   = NCURSES_BITS 1u 22
 
 // chtype: encodes a character, attributes and color-pair
 //

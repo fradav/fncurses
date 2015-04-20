@@ -43,6 +43,30 @@ module Example =
             do! refresh ()
         }
 
+    let attributes () =
+        ncurses {
+            do!
+                [|
+                    "A_NORMAL",A_NORMAL
+                    "A_STANDOUT",A_STANDOUT
+                    "A_UNDERLINE",A_UNDERLINE
+                    "A_REVERSE",A_REVERSE
+                    "A_BLINK",A_BLINK
+                    "A_DIM",A_DIM
+                    "A_BOLD",A_BOLD
+                    "A_ALTCHARSET",A_ALTCHARSET
+                    "A_INVIS",A_INVIS
+                    "A_PROTECT",A_PROTECT
+                |] |> NcursesArray.iter (fun (text,attribute) ->
+                    ncurses {
+                        do! attrset attribute
+                        do! printw "%s" text
+                        do! attroff attribute
+                        do! addch '\n'
+                    })
+            }
+
+
 // runners
 
 let run f =
@@ -71,7 +95,6 @@ let run f =
 
 [<EntryPoint>]
 let main argv =
-    match run Example.annoy with
-    | Success _ -> 
-        0
+    match run Example.attributes with
+    | Success _ -> 0
     | Failure reason -> printfn "%s" reason; 1
