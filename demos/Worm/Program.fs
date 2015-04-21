@@ -149,70 +149,61 @@ let cleanup () =
 
 // Learn more about F# at http://fsharp.net
 // See the 'F# Tutorial' project for more help.
+open Nessos.UnionArgParser
+
+type Arguments =
+    | Field
+    | Length of int
+    | Number of int
+    | Trail
+with
+    interface IArgParserTemplate with
+        member this.Usage =
+            match this with
+            | Field _ -> "field."
+            | Length _ -> "specify the worm length."
+            | Number _ -> "specify the number of worms."
+            | Trail _ -> "trail."
+
+type Configuration = 
+    { Field: string
+      Length: int
+      Number: int
+      Trail: ChType }
+with
+    static member make (field,length,number,trail) =
+        {
+            Field = field
+            Length = length
+            Number = number
+            Trail = trail
+        } 
+
+let parser = UnionArgParser.Create<Arguments>()
+
+let usage = parser.Usage()
+
+let config (args:ArgParseResults<Arguments>) = 
+    let field = if args.Contains <@ Field @> then "WORM" else ""
+    let length = args.GetResult <@ Length @>
+    let number = args.GetResult <@ Number @>
+    let trail = if args.Contains <@ Trail @> then ' ' else '.'
+    Configuration.make(field, length, number, ChType.ofChar trail)
+
+let run () =
+    ncurses {
+        let! win = initscr ()
+        return! cleanup ()
+    }
 
 [<EntryPoint>]
-let main argv = 
-    printfn "%A" argv
+let main argv =
+    let config = parser.Parse argv |> config
+         
     0 // return an integer exit code
 
-//int main(int argc, char *argv[])
-//{
-//    const struct options *op;
-//    struct worm *w;
-//    short **ref, *ip;
-//    int x, y, n, h, last, bottom;
-//    const unsigned seed = (unsigned)time((time_t *)0);
-//
-//    for (x = 1; x < argc; x++)
-//    {
-//        char *p = argv[x];
-//
-//        if (*p == '-')
-//            p++;
-//
-//        switch (*p)
-//        {
-//        case 'f':
-//            field = "WORM";
-//            break;
-//        case 'l':
-//            if (++x == argc)
-//                goto usage;
-//
-//            if ((length = atoi(argv[x])) < 2 || length > 1024)
-//            {
-//                fprintf(stderr, "%s: Invalid length\n", *argv);
-//                return EXIT_FAILURE;
-//            }
-//
-//            break;
-//        case 'n':
-//            if (++x == argc)
-//                goto usage;
-//
-//            if ((number = atoi(argv[x])) < 1 || number > 40)
-//            {
-//                fprintf(stderr, "%s: Invalid number of worms\n", *argv);
-//                return EXIT_FAILURE;
-//            }
-//
-//            break;
-//        case 't':
-//            trail = '.';
-//            break;
-//        default:
-//              usage:
-//            fprintf(stderr, "usage: %s [-field] [-length #] "
-//                            "[-number #] [-trail]\n", *argv);
-//            return EXIT_FAILURE;
-//        }
-//    }
-//
-//#ifdef XCURSES
-//    Xinitscr(argc, argv);
-//#else
-//    initscr();
-//#endif
+
+
 //    srand(seed);
 //
 //    noecho();

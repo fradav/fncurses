@@ -8,5 +8,6 @@ nuget NUnit.Runners
 nuget Nuget.CommandLine
 nuget SourceLink.Fake
 nuget ExtCore
+nuget UnionArgParser
 
 github fsharp/FAKE modules/Octokit/Octokit.fsx
