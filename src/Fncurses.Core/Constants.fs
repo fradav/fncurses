@@ -46,6 +46,25 @@ module Constants =
     let A_INVIS      = NCURSES_BITS 1u 15
     let A_PROTECT    = NCURSES_BITS 1u 16
 
+    // let A_NORMAL = 0u
+    // let A_OVERLINE =  A_NORMAL
+    // let A_STRIKEOUT =  A_NORMAL
+    // let A_ATTRIBUTES = 0xffff0000u
+    // let A_ALTCHARSET = 0x00010000u
+    // let A_RIGHTLINE  = 0x00020000u
+    // let A_LEFTLINE   = 0x00040000u
+    // let A_INVIS      = 0x00080000u
+    // let A_UNDERLINE  = 0x00100000u
+    // let A_REVERSE    = 0x00200000u
+    // let A_BLINK      = 0x00400000u
+    // let A_BOLD       = 0x00800000u
+    // let A_CHARTEXT   = 0x0000ffffu
+    // let A_COLOR      = 0xff000000u
+    // let A_RGB_COLOR  = A_NORMAL
+    // let A_DIM        = A_NORMAL
+    // let A_STANDOUT   = A_REVERSE ||| A_BOLD
+    // let A_PROTECT    = A_UNDERLINE ||| A_LEFTLINE ||| A_RIGHTLINE
+        
 // chtype: encodes a character, attributes and color-pair
 //
 //The following symbolic constants are used to manipulate attribute bits in objects of type chtype:
