@@ -181,6 +181,28 @@ module NCurses =
     // let mvinchnstr y x ch n = Imported.mvinchnstr |> Check.unitResult "mvinchnstr"
     // let mvwinchstr win y x ch = Imported.mvwinchstr |> Check.unitResult "mvwinchstr"
     // let mvwinchnstr win y x ch n = Imported.mvwinchnstr |> Check.unitResult "mvwinchstr"
+
+    // inopts
+
+    let cbreak () = Imported.cbreak () |> Check.unitResult "cbreak"
+    let nocbreak () = Imported.nocbreak () |> Check.unitResult "nocbreak"
+    let echo () = Imported.echo () |> Check.unitResult "echo"
+    let noecho () = Imported.noecho () |> Check.unitResult "noecho"
+    let halfdelay tenths = Imported.halfdelay tenths |> Check.unitResult "halfdelay"
+    let intrflush win bf = Imported.intrflush win bf |> Check.unitResult "intrflush"
+    let keypad win bf = Imported.keypad win bf |> Check.unitResult "keypad"
+    let meta win bf = Imported.meta win bf |> Check.unitResult "meta"
+    let nl () = Imported.nl () |> Check.unitResult "nl"
+    let nonl () = Imported.nonl () |> Check.unitResult "nonl"
+    let nodelay win bf = Imported.nodelay win bf |> Check.unitResult "nodelay"
+    let notimeout win bf = Imported.notimeout win bf |> Check.unitResult "notimeout"
+    let raw () = Imported.raw () |> Check.unitResult "raw"
+    let noraw () = Imported.noraw () |> Check.unitResult "noraw"
+    let noqiflush () = Imported.noqiflush () |> Result.result
+    let qiflush () = Imported.qiflush () |> Result.result
+    let timeout delay = Imported.timeout delay |> Result.result
+    let wtimeout win delay = Imported.wtimeout win delay |> Result.result
+    let typeahead fildes = Imported.typeahead fildes |> Check.unitResult "typeahead"
      
     // kernel
                     
