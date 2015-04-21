@@ -181,13 +181,26 @@ module NCurses =
     // let mvinchnstr y x ch n = Imported.mvinchnstr |> Check.unitResult "mvinchnstr"
     // let mvwinchstr win y x ch = Imported.mvwinchstr |> Check.unitResult "mvwinchstr"
     // let mvwinchnstr win y x ch n = Imported.mvwinchnstr |> Check.unitResult "mvwinchstr"
-                     
-        
+     
+    // kernel
+                    
+    let def_prog_mode () = Imported.def_prog_mode () |> Check.unitResult "def_prog_mode"
+    let def_shell_mode () = Imported.def_shell_mode () |> Check.unitResult "def_shell_mode"
+    let reset_prog_mode () = Imported.reset_prog_mode () |> Check.unitResult "reset_prog_mode"
+    let reset_shell_mode () = Imported.reset_shell_mode () |> Check.unitResult "reset_shell_mode"
+    let resetty () = Imported.resetty () |> Check.unitResult "resetty"
+    let savetty () = Imported.savetty () |> Check.unitResult "savetty"
+    // TODO: void getsyx(int y, int x);
+    // TODO: void setsyx(int y, int x);
+    // TODO: int ripoffline(int line, int (*init)(WINDOW *, int));
+    let curs_set visibility = Imported.curs_set visibility |> Check.unitResult "curs_set"
+    let napms ms = Imported.napms ms |> Check.unitResult "napms"
+
     let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
     // TODO: getch incompatible with windows? use wgetch instead
     let getch () = raise <| NotImplementedException()
     //let wgetch win = Imported.wgetch(win) |> Check.cintResult "wgetch"
-    let napms ms = Imported.napms(ms) |> Check.unitResult "napms"
+    //let napms ms = Imported.napms(ms) |> Check.unitResult "napms"
     let refresh () = Imported.refresh() |> Check.unitResult "refresh"
     let endwin () = Imported.endwin() |> Check.cintResult "endwin"
     //let getmaxyx win = Imported.getmaxyx win |> Result.result

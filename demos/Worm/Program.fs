@@ -56,99 +56,105 @@ Options:
 
 open Fncurses.Core
 
-//#define FLAVORS 7
-//
-//static chtype flavor[FLAVORS] =
-//{
-//    'O', '*', '#', '$', '%', '0', '@'
-//};
-//
-//static const short xinc[] =
-//{
-//    1, 1, 1, 0, -1, -1, -1, 0
-//},
-//yinc[] =
-//{
-//    -1, 0, 1, 1, 1, 0, -1, -1
-//};
-//
-//static struct worm
-//{
-//    int orientation, head;
-//    short *xpos, *ypos;
-//} worm[40];
-//
-//static const char *field;
-//static int length = 16, number = 3;
-//static chtype trail = ' ';
-//
-//static const struct options
-//{
-//    int nopts;
-//    int opts[3];
-//} normal[8] =
-//{
-//    { 3, { 7, 0, 1 } }, { 3, { 0, 1, 2 } }, { 3, { 1, 2, 3 } },
-//    { 3, { 2, 3, 4 } }, { 3, { 3, 4, 5 } }, { 3, { 4, 5, 6 } },
-//    { 3, { 5, 6, 7 } }, { 3, { 6, 7, 0 } }
-//},
-//upper[8] =
-//{
-//    { 1, { 1, 0, 0 } }, { 2, { 1, 2, 0 } }, { 0, { 0, 0, 0 } },
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }, { 2, { 4, 5, 0 } },
-//    { 1, { 5, 0, 0 } }, { 2, { 1, 5, 0 } }
-//},
-//left[8] =
-//{
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } },
-//    { 2, { 2, 3, 0 } }, { 1, { 3, 0, 0 } }, { 2, { 3, 7, 0 } },
-//    { 1, { 7, 0, 0 } }, { 2, { 7, 0, 0 } }
-//},
-//right[8] =
-//{
-//    { 1, { 7, 0, 0 } }, { 2, { 3, 7, 0 } }, { 1, { 3, 0, 0 } },
-//    { 2, { 3, 4, 0 } }, { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } },
-//    { 0, { 0, 0, 0 } }, { 2, { 6, 7, 0 } }
-//},
-//lower[8] =
-//{
-//    { 0, { 0, 0, 0 } }, { 2, { 0, 1, 0 } }, { 1, { 1, 0, 0 } },
-//    { 2, { 1, 5, 0 } }, { 1, { 5, 0, 0 } }, { 2, { 5, 6, 0 } },
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }
-//},
-//upleft[8] =
-//{
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } },
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }, { 1, { 3, 0, 0 } },
-//    { 2, { 1, 3, 0 } }, { 1, { 1, 0, 0 } }
-//},
-//upright[8] =
-//{
-//    { 2, { 3, 5, 0 } }, { 1, { 3, 0, 0 } }, { 0, { 0, 0, 0 } },
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } },
-//    { 0, { 0, 0, 0 } }, { 1, { 5, 0, 0 } }
-//},
-//lowleft[8] =
-//{
-//    { 3, { 7, 0, 1 } }, { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } },
-//    { 1, { 1, 0, 0 } }, { 2, { 1, 7, 0 } }, { 1, { 7, 0, 0 } },
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }
-//},
-//lowright[8] =
-//{
-//    { 0, { 0, 0, 0 } }, { 1, { 7, 0, 0 } }, { 2, { 5, 7, 0 } },
-//    { 1, { 5, 0, 0 } }, { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } },
-//    { 0, { 0, 0, 0 } }, { 0, { 0, 0, 0 } }
-//};
-//
-//static void cleanup(void)
-//{
-//    standend();
-//    refresh();
-//    curs_set(1);
-//    endwin();
-//}
-//
+let flavor = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] |> Array.map ChType.ofChar
+let xinc = [| 1; 1; 1; 0; -1; -1; -1; 0 |]
+let yinc = [| -1; 0; 1; 1; 1; 0; -1; -1 |]
+
+type Worm =
+    { Orientation : int
+      Head : int
+      XPos : int
+      YPos : int }
+
+let field = ""
+let length = 16
+let number = 3
+let trail = ChType.ofChar ' '
+
+type Options = 
+    { Nopts : int
+      Opts : int array }
+    static member make (nopts,opts) = { Nopts = nopts; Opts = opts }
+
+let normal =
+    [|
+        3, [| 7; 0; 1 |]; 3, [| 0; 1; 2 |]; 3, [| 1; 2; 3 |];
+        3, [| 2; 3; 4 |]; 3, [| 3; 4; 5 |]; 3, [| 4; 5; 6 |];
+        3, [| 5; 6; 7 |]; 3, [| 6; 7; 0 |]
+    |] |> Array.map Options.make
+
+let upper =
+    [|
+        1, [| 1; 0; 0 |]; 2, [| 1; 2; 0 |]; 0, [| 0; 0; 0 |];
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 2, [| 4; 5; 0 |];
+        1, [| 5; 0; 0 |]; 2, [| 1; 5; 0 |]
+    |] |> Array.map Options.make
+
+let left =
+    [|
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
+        2, [| 2; 3; 0 |]; 1, [| 3; 0; 0 |]; 2, [| 3; 7; 0 |];
+        1, [| 7; 0; 0 |]; 2, [| 7; 0; 0 |]
+    |] |> Array.map Options.make
+
+let right =
+    [|
+        1, [| 7; 0; 0 |]; 2, [| 3; 7; 0 |]; 1, [| 3; 0; 0 |];
+        2, [| 3; 4; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
+        0, [| 0; 0; 0 |]; 2, [| 6; 7; 0 |]
+    |] |> Array.map Options.make
+
+let lower =
+    [|
+        0, [| 0; 0; 0 |]; 2, [| 0; 1; 0 |]; 1, [| 1; 0; 0 |];
+        2, [| 1; 5; 0 |]; 1, [| 5; 0; 0 |]; 2, [| 5; 6; 0 |];
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]
+    |] |> Array.map Options.make
+
+let upleft =
+    [|
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 1, [| 3; 0; 0 |];
+        2, [| 1; 3; 0 |]; 1, [| 1; 0; 0 |]
+    |] |> Array.map Options.make
+
+let upright =
+    [|
+        2, [| 3; 5; 0 |]; 1, [| 3; 0; 0 |]; 0, [| 0; 0; 0 |];
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
+        0, [| 0; 0; 0 |]; 1, [| 5; 0; 0 |]
+    |] |> Array.map Options.make
+
+let lowleft =
+    [|
+        3, [| 7; 0; 1 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
+        1, [| 1; 0; 0 |]; 2, [| 1; 7; 0 |]; 1, [| 7; 0; 0 |];
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]
+    |] |> Array.map Options.make
+
+let lowright =
+    [|
+        0, [| 0; 0; 0 |]; 1, [| 7; 0; 0 |]; 2, [| 5; 7; 0 |];
+        1, [| 5; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
+        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]
+    |] |> Array.map Options.make
+
+let cleanup () =
+    ncurses {
+        do! standend ()
+        do! refresh ()
+        do! curs_set 1s
+        return! endwin ()
+    }
+
+// Learn more about F# at http://fsharp.net
+// See the 'F# Tutorial' project for more help.
+
+[<EntryPoint>]
+let main argv = 
+    printfn "%A" argv
+    0 // return an integer exit code
+
 //int main(int argc, char *argv[])
 //{
 //    const struct options *op;
@@ -431,10 +437,3 @@ open Fncurses.Core
 //    }
 //}
 
-// Learn more about F# at http://fsharp.net
-// See the 'F# Tutorial' project for more help.
-
-[<EntryPoint>]
-let main argv = 
-    printfn "%A" argv
-    0 // return an integer exit code
