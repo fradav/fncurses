@@ -241,4 +241,12 @@ module Types =
     type WinPtr_WinPtr_CInt = delegate of WinPtr * WinPtr -> CInt
     [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
     type WinPtr_WinPtr_CInt_CInt_CInt_CInt_CInt_CInt_CInt_CInt = delegate of WinPtr * WinPtr * CInt * CInt * CInt * CInt * CInt * CInt * CInt -> CInt
-            
+
+module ChType =
+
+    open System
+    
+    let ofInt (ch:int) : ChType = Convert.ToUInt32 ch
+    let ofChar (ch:char) : ChType = Convert.ToUInt32 ch
+    let zero = ofInt 0
+    let one = ofInt 1
