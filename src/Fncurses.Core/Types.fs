@@ -241,3 +241,4 @@ module Types =
     type WinPtr_WinPtr_CInt = delegate of WinPtr * WinPtr -> CInt
     [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
     type WinPtr_WinPtr_CInt_CInt_CInt_CInt_CInt_CInt_CInt_CInt = delegate of WinPtr * WinPtr * CInt * CInt * CInt * CInt * CInt * CInt * CInt -> CInt
+            

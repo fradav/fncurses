@@ -33,9 +33,9 @@ module Example =
                         do! [|0 .. 4|]
                             |> NcursesArray.iter (fun b ->
                                 ncurses {
-                                    if b = a then do! attrset (A_BOLD ||| A_UNDERLINE)
+                                    if b = a then do! attrset (Attributes.A_BOLD ||| Attributes.A_UNDERLINE)
                                     do! printw "%s" text.[b]
-                                    if b = a then do! attroff (A_BOLD ||| A_UNDERLINE)
+                                    if b = a then do! attroff (Attributes.A_BOLD ||| Attributes.A_UNDERLINE)
                                     do! addch ' '
                                 })
                         do! addstr "\b\n"
@@ -47,16 +47,16 @@ module Example =
         ncurses {
             do!
                 [|
-                    "A_NORMAL",A_NORMAL
-                    "A_STANDOUT",A_STANDOUT
-                    "A_UNDERLINE",A_UNDERLINE
-                    "A_REVERSE",A_REVERSE
-                    "A_BLINK",A_BLINK
-                    "A_DIM",A_DIM
-                    "A_BOLD",A_BOLD
-                    "A_ALTCHARSET",A_ALTCHARSET
-                    "A_INVIS",A_INVIS
-                    "A_PROTECT",A_PROTECT
+                    "A_NORMAL",Attributes.A_NORMAL
+                    "A_STANDOUT",Attributes.A_STANDOUT
+                    "A_UNDERLINE",Attributes.A_UNDERLINE
+                    "A_REVERSE",Attributes.A_REVERSE
+                    "A_BLINK",Attributes.A_BLINK
+                    "A_DIM",Attributes.A_DIM
+                    "A_BOLD",Attributes.A_BOLD
+                    "A_ALTCHARSET",Attributes.A_ALTCHARSET
+                    "A_INVIS",Attributes.A_INVIS
+                    "A_PROTECT",Attributes.A_PROTECT
                 |] |> NcursesArray.iter (fun (text,attribute) ->
                     ncurses {
                         do! attrset attribute
