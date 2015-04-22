@@ -78,5 +78,5 @@ module Attributes =
             member this.A_VERTICAL   = this.A_NORMAL             // not supported
         }
 
-    let Attributes = Platform.dispatch macAttributes nixAttributes winAttributes
+    let Attribute = Platform.dispatch macAttributes nixAttributes winAttributes
 

@@ -33,9 +33,9 @@ module Example =
                         do! [|0 .. 4|]
                             |> NcursesArray.iter (fun b ->
                                 ncurses {
-                                    if b = a then do! attrset (Attributes.A_BOLD ||| Attributes.A_UNDERLINE)
+                                    if b = a then do! attrset (Attribute.A_BOLD ||| Attribute.A_UNDERLINE)
                                     do! printw "%s" text.[b]
-                                    if b = a then do! attroff (Attributes.A_BOLD ||| Attributes.A_UNDERLINE)
+                                    if b = a then do! attroff (Attribute.A_BOLD ||| Attribute.A_UNDERLINE)
                                     do! addch ' '
                                 })
                         do! addstr "\b\n"
@@ -47,16 +47,16 @@ module Example =
         ncurses {
             do!
                 [|
-                    "A_NORMAL",Attributes.A_NORMAL
-                    "A_STANDOUT",Attributes.A_STANDOUT
-                    "A_UNDERLINE",Attributes.A_UNDERLINE
-                    "A_REVERSE",Attributes.A_REVERSE
-                    "A_BLINK",Attributes.A_BLINK
-                    "A_DIM",Attributes.A_DIM
-                    "A_BOLD",Attributes.A_BOLD
-                    "A_ALTCHARSET",Attributes.A_ALTCHARSET
-                    "A_INVIS",Attributes.A_INVIS
-                    "A_PROTECT",Attributes.A_PROTECT
+                    "A_NORMAL",Attribute.A_NORMAL
+                    "A_STANDOUT",Attribute.A_STANDOUT
+                    "A_UNDERLINE",Attribute.A_UNDERLINE
+                    "A_REVERSE",Attribute.A_REVERSE
+                    "A_BLINK",Attribute.A_BLINK
+                    "A_DIM",Attribute.A_DIM
+                    "A_BOLD",Attribute.A_BOLD
+                    "A_ALTCHARSET",Attribute.A_ALTCHARSET
+                    "A_INVIS",Attribute.A_INVIS
+                    "A_PROTECT",Attribute.A_PROTECT
                 |] |> NcursesArray.iter (fun (text,attribute) ->
                     ncurses {
                         do! attrset attribute

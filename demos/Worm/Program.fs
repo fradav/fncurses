@@ -74,6 +74,7 @@ let trail = ChType.ofChar ' '
 type Options = 
     { Nopts : int
       Opts : int array }
+with
     static member make (nopts,opts) = { Nopts = nopts; Opts = opts }
 
 let normal =
@@ -190,57 +191,42 @@ let config (args:ArgParseResults<Arguments>) =
     let trail = if args.Contains <@ Trail @> then ' ' else '.'
     Configuration.make(field, length, number, ChType.ofChar trail)
 
+let SET_COLOR(num, fg, bg) =
+    ncurses {
+        do! init_pair (num + 1) fg bg
+        do flavor.[int num] <- flavor.[int num] ||| COLOR_PAIR(num + 1) ||| Attributes.A_BOLD
+    }
+
 let run () =
     ncurses {
         let! win = initscr ()
-        return! cleanup ()
-    }
+        //srand(seed);
+     
+        do! noecho ()
+        do! cbreak () 
+        do! nonl () 
+        do! keypad win TRUE
+     
+        do! curs_set 0s
+     
+        let bottom = LINES () - 1s;
+        let last = COLS () - 1s;
 
-[<EntryPoint>]
-let main argv =
-    let config = parser.Parse argv |> config
-         
-    0 // return an integer exit code
+        if has_colors () then
+            let bg = COLOR_BLACK
+            do! start_color ()
 
+            if use_default_colors () then
+                bg = -1
 
-
-//    srand(seed);
-//
-//    noecho();
-//    cbreak();
-//    nonl();
-//    keypad(stdscr, TRUE);
-//
-//    curs_set(0);
-//
-//    bottom = LINES - 1;
-//    last = COLS - 1;
-//
-//#ifdef A_COLOR
-//    if (has_colors())
-//    {
-//        short bg = COLOR_BLACK;     /* BJG */
-//        start_color();
-//
-//# if defined(NCURSES_VERSION) || (defined(PDC_BUILD) && PDC_BUILD > 3000)
-//        if (use_default_colors() == OK)
-//            bg = -1;
-//# endif
-//
-//# define SET_COLOR(num, fg) \
-//        init_pair(num + 1, fg, bg); \
-//        flavor[num] |= COLOR_PAIR(num + 1) | A_BOLD
-//
-//        SET_COLOR(0, COLOR_GREEN);
-//        SET_COLOR(1, COLOR_RED);
-//        SET_COLOR(2, COLOR_CYAN);
-//        SET_COLOR(3, COLOR_WHITE);
-//        SET_COLOR(4, COLOR_MAGENTA);
-//        SET_COLOR(5, COLOR_BLUE);
-//        SET_COLOR(6, COLOR_YELLOW);
-//    }
-//#endif
-//
+            do! SET_COLOR(0, COLOR_GREEN, bg)
+            do! SET_COLOR(1, COLOR_RED, bg)
+            do! SET_COLOR(2, COLOR_CYAN, bg)
+            do! SET_COLOR(3, COLOR_WHITE, bg)
+            do! SET_COLOR(4, COLOR_MAGENTA, bg)
+            do! SET_COLOR(5, COLOR_BLUE, bg)
+            do! SET_COLOR(6, COLOR_YELLOW, bg)
+     
 //    ref = malloc(sizeof(short *) * LINES);
 //
 //    for (y = 0; y < LINES; y++)
@@ -426,5 +412,14 @@ let main argv =
 //        napms(12);
 //        refresh();
 //    }
-//}
+     
+        return! cleanup ()
+    }
+
+[<EntryPoint>]
+let main argv =
+    let config = parser.Parse argv |> config
+         
+    0 // return an integer exit code
+
 
