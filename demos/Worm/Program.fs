@@ -148,8 +148,6 @@ let cleanup () =
         return! endwin ()
     }
 
-// Learn more about F# at http://fsharp.net
-// See the 'F# Tutorial' project for more help.
 open Nessos.UnionArgParser
 
 type Arguments =
@@ -215,11 +213,10 @@ let initColors () =
             do! SET_COLOR(6s, Color.COLOR_YELLOW, bg)
     }
 
-let run () =
+let run (config: Configuration) =
     ncurses {
         let! win = initscr ()
-        //srand(seed);
-     
+        //srand(seed);     
         do! noecho ()
         do! cbreak () 
         do! nonl () 
@@ -238,13 +235,14 @@ let run () =
 //        for (x = 0; x < COLS; x++)
 //            ref[y][x] = 0;
 //    }
-//
+
 //#ifdef BADCORNER
 //    /* if addressing the lower right corner doesn't work in your curses */
 //
 //    ref[bottom][last] = 1;
 //#endif
-//
+
+
 //    for (n = number, w = &worm[0]; --n >= 0; w++)
 //    {
 //        w->orientation = w->head = 0;
@@ -271,7 +269,7 @@ let run () =
 //        for (y = length; --y >= 0;)
 //            *ip++ = -1;
 //    }
-//
+
 //    if (field)
 //    {
 //        const char *p = field;
@@ -285,11 +283,11 @@ let run () =
 //                    p = field;
 //            }
 //    }
-//
-//    napms(12);
-//    refresh();
-//    nodelay(stdscr, TRUE);
-//
+
+        do! napms 12s
+        do! refresh ()
+        do! nodelay win true
+
 //    for (;;)
 //    {
 //        int ch;
@@ -421,7 +419,7 @@ let run () =
 [<EntryPoint>]
 let main argv =
     let config = parser.Parse argv |> config
-         
+    run config     
     0 // return an integer exit code
 
 
