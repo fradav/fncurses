@@ -58,7 +58,7 @@ module Attributes =
     //    bits), 8 bits for other attributes, and 16 bits for character data.        
     let winAttributes () =
         { new IAttributes with
-            member this.A_NORMAL = 0u
+            member this.A_NORMAL     = ChType.zero
             member this.A_STANDOUT   = this.A_REVERSE ||| this.A_BOLD
             member this.A_UNDERLINE  = ChType.ofInt 0x00100000   // bit 20
             member this.A_REVERSE    = ChType.ofInt 0x00200000   // bit 21

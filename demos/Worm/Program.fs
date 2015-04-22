@@ -191,11 +191,29 @@ let config (args:ArgParseResults<Arguments>) =
     let trail = if args.Contains <@ Trail @> then ' ' else '.'
     Configuration.make(field, length, number, ChType.ofChar trail)
 
-//let SET_COLOR(num, fg, bg) =
-//    ncurses {
-//        do! init_pair (num + 1s) fg bg
-//        do flavor.[int num] <- flavor.[int num] ||| COLOR_PAIR(num + 1) ||| Attribute.A_BOLD
-//    }
+let SET_COLOR(num, fg, bg) =
+   ncurses {
+       do! init_pair (num + CInt.one) fg bg
+       do flavor.[int num] <- flavor.[int num] ||| Color.COLOR_PAIR(num + CInt.one) ||| Attribute.A_BOLD
+   }
+
+let initColors () =
+    ncurses {
+        if has_colors () then
+            do! start_color ()
+            // TODO: Choice.bimap???
+            let bg = 
+                match use_default_colors () with
+                | Success _ -> -1s
+                | Failure _ -> Color.COLOR_BLACK
+            do! SET_COLOR(0s, Color.COLOR_GREEN, bg)
+            do! SET_COLOR(1s, Color.COLOR_RED, bg)
+            do! SET_COLOR(2s, Color.COLOR_CYAN, bg)
+            do! SET_COLOR(3s, Color.COLOR_WHITE, bg)
+            do! SET_COLOR(4s, Color.COLOR_MAGENTA, bg)
+            do! SET_COLOR(5s, Color.COLOR_BLUE, bg)
+            do! SET_COLOR(6s, Color.COLOR_YELLOW, bg)
+    }
 
 let run () =
     ncurses {
@@ -209,21 +227,7 @@ let run () =
         do! curs_set 0s     
         let bottom = LINES () - 1s;
         let last = COLS () - 1s;
-
-        if has_colors () then
-            do! start_color ()
-//            let bg = 
-//                match use_default_colors () with
-//                | Success _ -> -1s
-//                | Failure _ -> Color.COLOR_BLACK
-
-//            do! SET_COLOR(0s, Color.COLOR_GREEN, bg)
-//            do! SET_COLOR(1s, Color.COLOR_RED, bg)
-//            do! SET_COLOR(2s, Color.COLOR_CYAN, bg)
-//            do! SET_COLOR(3s, Color.COLOR_WHITE, bg)
-//            do! SET_COLOR(4s, Color.COLOR_MAGENTA, bg)
-//            do! SET_COLOR(5s, Color.COLOR_BLUE, bg)
-//            do! SET_COLOR(6s, Color.COLOR_YELLOW, bg)
+        do! initColors()
      
 //    ref = malloc(sizeof(short *) * LINES);
 //

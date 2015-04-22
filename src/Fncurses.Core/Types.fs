@@ -246,7 +246,17 @@ module ChType =
 
     open System
     
-    let ofInt (ch:int) : ChType = Convert.ToUInt32 ch
-    let ofChar (ch:char) : ChType = Convert.ToUInt32 ch
+    let ofChar (ch: char) : ChType = Convert.ToUInt32 ch
+    let ofInt (ch: int) : ChType = Convert.ToUInt32 ch
+    let ofCInt (ch: CInt) : ChType = Convert.ToUInt32 ch
+    let zero = ofInt 0
+    let one = ofInt 1
+
+module CInt =
+
+    open System
+        
+    let ofChType (a: ChType) : CInt = Convert.ToInt16 a
+    let ofInt (a: int) : CInt = Convert.ToInt16 a
     let zero = ofInt 0
     let one = ofInt 1
