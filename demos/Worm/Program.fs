@@ -191,11 +191,11 @@ let config (args:ArgParseResults<Arguments>) =
     let trail = if args.Contains <@ Trail @> then ' ' else '.'
     Configuration.make(field, length, number, ChType.ofChar trail)
 
-let SET_COLOR(num, fg, bg) =
-    ncurses {
-        do! init_pair (num + 1) fg bg
-        do flavor.[int num] <- flavor.[int num] ||| COLOR_PAIR(num + 1) ||| Attributes.A_BOLD
-    }
+//let SET_COLOR(num, fg, bg) =
+//    ncurses {
+//        do! init_pair (num + 1s) fg bg
+//        do flavor.[int num] <- flavor.[int num] ||| COLOR_PAIR(num + 1) ||| Attribute.A_BOLD
+//    }
 
 let run () =
     ncurses {
@@ -205,27 +205,25 @@ let run () =
         do! noecho ()
         do! cbreak () 
         do! nonl () 
-        do! keypad win TRUE
-     
-        do! curs_set 0s
-     
+        do! keypad win true    
+        do! curs_set 0s     
         let bottom = LINES () - 1s;
         let last = COLS () - 1s;
 
         if has_colors () then
-            let bg = COLOR_BLACK
             do! start_color ()
+//            let bg = 
+//                match use_default_colors () with
+//                | Success _ -> -1s
+//                | Failure _ -> Color.COLOR_BLACK
 
-            if use_default_colors () then
-                bg = -1
-
-            do! SET_COLOR(0, COLOR_GREEN, bg)
-            do! SET_COLOR(1, COLOR_RED, bg)
-            do! SET_COLOR(2, COLOR_CYAN, bg)
-            do! SET_COLOR(3, COLOR_WHITE, bg)
-            do! SET_COLOR(4, COLOR_MAGENTA, bg)
-            do! SET_COLOR(5, COLOR_BLUE, bg)
-            do! SET_COLOR(6, COLOR_YELLOW, bg)
+//            do! SET_COLOR(0s, Color.COLOR_GREEN, bg)
+//            do! SET_COLOR(1s, Color.COLOR_RED, bg)
+//            do! SET_COLOR(2s, Color.COLOR_CYAN, bg)
+//            do! SET_COLOR(3s, Color.COLOR_WHITE, bg)
+//            do! SET_COLOR(4s, Color.COLOR_MAGENTA, bg)
+//            do! SET_COLOR(5s, Color.COLOR_BLUE, bg)
+//            do! SET_COLOR(6s, Color.COLOR_YELLOW, bg)
      
 //    ref = malloc(sizeof(short *) * LINES);
 //

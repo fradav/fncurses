@@ -25,12 +25,6 @@ module NCurses =
     let TABSIZE () = Platform.getCInt Imported.loader Imported.libPtr "TABSIZE"
     //let acs_map = Platform.getChTypeArray loader libPtr "acs_map"
     //let ttytype = Platform.getCCharArray loader libPtr "ttytype"
-
-    # define A_COLOR      (chtype)0xff000000
-    # define PDC_COLOR_SHIFT 24
-    #define COLOR_PAIR(n)      (((chtype)(n) << PDC_COLOR_SHIFT) & A_COLOR)
-    #define PAIR_NUMBER(n)     (((n) & A_COLOR) >> PDC_COLOR_SHIFT)
-
            
     // ----------------------------------------------------------------------
     // Functions
@@ -126,7 +120,10 @@ module NCurses =
     let can_change_color () = Imported.can_change_color () |> Result.result
     let color_content color = Imported.color_content color |> Check.optionResult "color_content"
     let pair_content pair = Imported.pair_content pair |> Check.optionResult "pair_content"
-        
+
+    let assume_default_colors fg bg = Imported.assume_default_colors fg bg |> Check.unitResult "assume_default_colors"
+    let use_default_colors () = Imported.use_default_colors () |> Check.unitResult "use_default_colors"
+
     // delch
 
     let delch () = Imported.delch () |> Check.unitResult "delch"

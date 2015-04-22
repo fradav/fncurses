@@ -79,4 +79,3 @@ module Attributes =
         }
 
     let Attribute = Platform.dispatch macAttributes nixAttributes winAttributes
-

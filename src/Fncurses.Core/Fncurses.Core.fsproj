@@ -48,6 +48,7 @@
     <Compile Include="Platform.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Attributes.fs" />
+    <Compile Include="Colors.fs" />
     <Compile Include="Imported.fs" />
     <Compile Include="NCurses.fs" />
     <None Include="Script.fsx" />
