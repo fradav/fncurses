@@ -5,25 +5,20 @@ module Constants =
 
     open System
         
-    /// boolean false value
-    [<Literal>] 
-    let FALSE = 0
+    /// Boolean false value     
+    let [<Literal>] FALSE = 0
   
-    /// boolean true value
-    [<Literal>] 
-    let TRUE = 1
+    /// Boolean true value     
+    let [<Literal>] TRUE = 1
   
-    /// zero pointer value
+    /// Zero pointer value
     let NULL = IntPtr.Zero
   
-    /// value returned on error condition
-    [<Literal>] 
-    let ERR = -1s
+    /// Value returned on error condition
+    let [<Literal>] ERR = -1s
   
-    /// value returned on successful completion
-    [<Literal>] 
-    let OK = 0s
+    /// Value returned on successful completion     
+    let [<Literal>] OK = 0s
   
-    /// buffer size
-    [<Literal>]
-    let BUFFER_SIZE = 255s
+    /// The default size for buffers    
+    let [<Literal>] BUFFER_SIZE = 255s

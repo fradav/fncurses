@@ -1,6 +1,7 @@
 namespace Fncurses.Core
 
-module Imported =
+[<RequireQualifiedAccess>]
+module internal Imported =
 
     open System.Text
         
@@ -14,7 +15,7 @@ module Imported =
             (fun () -> Platform.winLibraryPath "pdcurses.dll")
     let internal libPtr = loader.LoadLibrary(dllPath)
 
-    module internal Delegate =
+    module Delegate =
 
         // Standard functions
 

@@ -242,21 +242,23 @@ module Types =
     [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
     type WinPtr_WinPtr_CInt_CInt_CInt_CInt_CInt_CInt_CInt_CInt = delegate of WinPtr * WinPtr * CInt * CInt * CInt * CInt * CInt * CInt * CInt -> CInt
 
+[<RequireQualifiedAccess>]
 module ChType =
 
     open System
     
     let ofChar (ch: char) : ChType = Convert.ToUInt32 ch
-    let ofInt (ch: int) : ChType = Convert.ToUInt32 ch
-    let ofCInt (ch: CInt) : ChType = Convert.ToUInt32 ch
+    let ofInt (ch: int) : ChType = uint32 ch
+    let ofCInt (ch: CInt) : ChType = uint32 ch
     let zero = ofInt 0
     let one = ofInt 1
 
+[<RequireQualifiedAccess>]
 module CInt =
 
     open System
         
-    let ofChType (a: ChType) : CInt = Convert.ToInt16 a
-    let ofInt (a: int) : CInt = Convert.ToInt16 a
+    let ofChType (a: ChType) : CInt = int16 a
+    let ofInt (a: int) : CInt = int16 a
     let zero = ofInt 0
     let one = ofInt 1

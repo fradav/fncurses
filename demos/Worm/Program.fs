@@ -419,7 +419,7 @@ let run (config: Configuration) =
 [<EntryPoint>]
 let main argv =
     let config = parser.Parse argv |> config
-    run config     
+    run config |> ignore     
     0 // return an integer exit code
 
 

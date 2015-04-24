@@ -1,6 +1,7 @@
 ﻿namespace Fncurses.Core
 
-module Platform =
+[<RequireQualifiedAccess>]
+module internal Platform =
 
     open System
     open System.IO
