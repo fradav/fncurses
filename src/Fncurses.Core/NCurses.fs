@@ -142,10 +142,10 @@ module NCurses =
 
     // getch
 
-    // TODO: demacro let getch () = Imported.getch () |> Check.unitResult "getch"
-    let wgetch win = Imported.wgetch win |> Check.unitResult "wgetch"
-    let mvgetch y x = Imported.mvgetch y x |> Check.unitResult "mvgetch"
-    let mvwgetch win y x = Imported.mvwgetch win y x |> Check.unitResult "mvwgetch"
+    let wgetch win = Imported.wgetch win |> Check.cintResult "wgetch"
+    let getch () = Imported.wgetch (stdscr ()) |> Check.cintResult "getch"
+    let mvgetch y x = Imported.mvgetch y x |> Check.cintResult "mvgetch"
+    let mvwgetch win y x = Imported.mvwgetch win y x |> Check.cintResult "mvwgetch"
     // TODO: demacro let ungetch ch = Imported.ungetch ch |> Check.unitResult "ungetch"
     let flushinp () = Imported.flushinp () |> Check.unitResult "flushinp"
     
@@ -185,6 +185,15 @@ module NCurses =
     // let mvwinchstr win y x ch = Imported.mvwinchstr |> Check.unitResult "mvwinchstr"
     // let mvwinchnstr win y x ch n = Imported.mvwinchnstr |> Check.unitResult "mvwinchstr"
 
+    // initscr
+        
+    let initscr () = Imported.initscr () |> Check.cptrResult "initscr"
+    let endwin () = Imported.endwin () |> Check.cintResult "endwin"
+    let isendwin () = Imported.isendwin ()
+    let newterm ``type`` outfd infd = Imported.newterm ``type`` outfd infd |> Check.cptrResult "set_term"
+    let set_term ``new`` = Imported.set_term ``new`` |> Check.cptrResult "set_term"
+    let delscreen sp = Imported.delscreen sp |> Result.result
+
     // inopts
 
     let cbreak () = Imported.cbreak () |> Check.unitResult "cbreak"
@@ -221,13 +230,7 @@ module NCurses =
     let curs_set visibility = Imported.curs_set visibility |> Check.unitResult "curs_set"
     let napms ms = Imported.napms ms |> Check.unitResult "napms"
 
-    let initscr () = Imported.initscr() |> Check.cptrResult "initscr"
-    // TODO: getch incompatible with windows? use wgetch instead
-    let getch () = raise <| NotImplementedException()
-    //let wgetch win = Imported.wgetch(win) |> Check.cintResult "wgetch"
-    //let napms ms = Imported.napms(ms) |> Check.unitResult "napms"
     let refresh () = Imported.refresh() |> Check.unitResult "refresh"
-    let endwin () = Imported.endwin() |> Check.cintResult "endwin"
     //let getmaxyx win = Imported.getmaxyx win |> Result.result
     //let getstr () = Imported.getstr() |> Check.optionResult "getstr"
     //let wgetnstr win n = Imported.wgetnstr win n |> Check.optionResult "wgetnstr"

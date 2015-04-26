@@ -63,9 +63,15 @@ let yinc = [| -1; 0; 1; 1; 1; 0; -1; -1 |]
 type Worm =
     { Orientation : int
       Head : int
-      XPos : int
-      YPos : int }
-
+      XPos : int array
+      YPos : int array }
+with
+    static member empty length =
+        { Orientation = 0
+          Head = 0
+          XPos = Array.create length -1
+          YPos = Array.create length -1 }
+        
 let field = ""
 let length = 16
 let number = 3
@@ -213,6 +219,86 @@ let initColors () =
             do! SET_COLOR(6s, Color.COLOR_YELLOW, bg)
     }
 
+let rec loop (worms: Worm array) =
+    ncurses {
+        for worm in worms do
+            let h = worm.Head 
+            let x = worm.XPos.[h]
+            if x < 0 then
+                worm.XPos.[h] <- 0
+                worm.YPos.[h] <- bottom
+                let x = 0
+                let y = bottom
+                do! move y x
+                do! addch flavor.[n % FLAVORS]
+                ref.[y].[x] ++
+            else
+                let y = worm.YPos.[h]
+
+            if x > last then x <- last
+            if y > bottom then y <- bottom
+            let h <- h + 1
+            if h = length then h <- 0
+            worm.Head <- h
+            if worm.XPos.[worm.Head] >= 0 then
+                let x1 = worm.XPos.[h]
+                let y1 = worm.YPos.[h]
+                ref.[y1].[x1] --
+                if y1 < LINES () && x1 < COLS then
+                    decr ref.[y1].[x1]
+                    if ref.[y1].[x1] = 0 then
+                        do! move y1 x1
+                        do! addch trail
+                                    
+//            if (w->xpos[w->head = h] >= 0)
+//            {
+//                int x1 = w->xpos[h];
+//                int y1 = w->ypos[h];
+//
+//                if (y1 < LINES && x1 < COLS && --ref[y1][x1] == 0)
+//                {
+//                    move(y1, x1);
+//                    addch(trail);
+//                }
+//            }
+//
+//            op = &(x == 0 ? (y == 0 ? upleft :
+//                  (y == bottom ? lowleft : left)) :
+//                  (x == last ? (y == 0 ? upright :
+//                  (y == bottom ? lowright : right)) :
+//                  (y == 0 ? upper :
+//                  (y == bottom ? lower : normal))))
+//                  [w->orientation];
+//
+//            switch (op->nopts)
+//            {
+//            case 0:
+//                cleanup();
+//                return EXIT_SUCCESS;
+//            case 1:
+//                w->orientation = op->opts[0];
+//                break;
+//            default:
+//                w->orientation = op->opts[rand() % op->nopts];
+//            }
+//
+//            move(y += yinc[w->orientation], x += xinc[w->orientation]);
+//
+//            if (y < 0)
+//                y = 0;
+//
+//            addch(flavor[n % FLAVORS]);
+//            ref[w->ypos[h] = y][w->xpos[h] = x]++;
+//        }
+//        napms(12);
+//        refresh();
+//    }
+        
+        do! napms 12
+        do! refresh ()
+        return! loop ()
+    }    
+
 let run (config: Configuration) =
     ncurses {
         let! win = initscr ()
@@ -225,16 +311,7 @@ let run (config: Configuration) =
         let bottom = LINES () - 1s;
         let last = COLS () - 1s;
         do! initColors()
-     
-//    ref = malloc(sizeof(short *) * LINES);
-//
-//    for (y = 0; y < LINES; y++)
-//    {
-//        ref[y] = malloc(sizeof(short) * COLS);
-//
-//        for (x = 0; x < COLS; x++)
-//            ref[y][x] = 0;
-//    }
+        let ref = Array2D.zeroCreate<int16> (int (LINES ())) (int (COLS ()))
 
 //#ifdef BADCORNER
 //    /* if addressing the lower right corner doesn't work in your curses */
@@ -242,34 +319,13 @@ let run (config: Configuration) =
 //    ref[bottom][last] = 1;
 //#endif
 
-
-//    for (n = number, w = &worm[0]; --n >= 0; w++)
-//    {
-//        w->orientation = w->head = 0;
-//
-//        if ((ip = malloc(sizeof(short) * (length + 1))) == NULL)
-//        {
-//            fprintf(stderr, "%s: out of memory\n", *argv);
-//            return EXIT_FAILURE;
-//        }
-//
-//        w->xpos = ip;
-//
-//        for (x = length; --x >= 0;)
-//            *ip++ = -1;
-//
-//        if ((ip = malloc(sizeof(short) * (length + 1))) == NULL)
-//        {
-//            fprintf(stderr, "%s: out of memory\n", *argv);
-//            return EXIT_FAILURE;
-//        }
-//
-//        w->ypos = ip;
-//
-//        for (y = length; --y >= 0;)
-//            *ip++ = -1;
-//    }
-
+        let worms =
+            [|
+                for i in 1 .. config.Number do
+                    yield Worm.empty config.Length
+            |]
+        
+// TODO: use field string as a repeated background???
 //    if (field)
 //    {
 //        const char *p = field;
@@ -287,7 +343,8 @@ let run (config: Configuration) =
         do! napms 12s
         do! refresh ()
         do! nodelay win true
-
+        do! loop worms
+        
 //    for (;;)
 //    {
 //        int ch;
