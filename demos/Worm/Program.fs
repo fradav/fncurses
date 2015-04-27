@@ -219,195 +219,33 @@ let initColors () =
             do! SET_COLOR(6s, Color.COLOR_YELLOW, bg)
     }
 
-let rec loop (worms: Worm array) =
+let checkUserInput () =
     ncurses {
-        for worm in worms do
-            let h = worm.Head 
-            let x = worm.XPos.[h]
-            if x < 0 then
-                worm.XPos.[h] <- 0
-                worm.YPos.[h] <- bottom
-                let x = 0
-                let y = bottom
-                do! move y x
-                do! addch flavor.[n % FLAVORS]
-                ref.[y].[x] ++
-            else
-                let y = worm.YPos.[h]
+        match getch () with
+        | Success ch ->
+            match char ch with
+            | 'q' ->
+                // Quit worms. 
+                return true
+            | 's' ->
+                // Enter single-step mode. 
+                do! nodelay (stdscr ()) false
+                return false
+            | ' ' -> 
+                // Leave single-step mode.
+                do! nodelay (stdscr ()) true
+                return false
+            | _ ->
+                // Continue. 
+                return false
+        | _ ->
+            // No user input, so continue. 
+            return false
+    }
 
-            if x > last then x <- last
-            if y > bottom then y <- bottom
-            let h <- h + 1
-            if h = length then h <- 0
-            worm.Head <- h
-            if worm.XPos.[worm.Head] >= 0 then
-                let x1 = worm.XPos.[h]
-                let y1 = worm.YPos.[h]
-                ref.[y1].[x1] --
-                if y1 < LINES () && x1 < COLS then
-                    decr ref.[y1].[x1]
-                    if ref.[y1].[x1] = 0 then
-                        do! move y1 x1
-                        do! addch trail
-                                    
-//            if (w->xpos[w->head = h] >= 0)
-//            {
-//                int x1 = w->xpos[h];
-//                int y1 = w->ypos[h];
-//
-//                if (y1 < LINES && x1 < COLS && --ref[y1][x1] == 0)
-//                {
-//                    move(y1, x1);
-//                    addch(trail);
-//                }
-//            }
-//
-//            op = &(x == 0 ? (y == 0 ? upleft :
-//                  (y == bottom ? lowleft : left)) :
-//                  (x == last ? (y == 0 ? upright :
-//                  (y == bottom ? lowright : right)) :
-//                  (y == 0 ? upper :
-//                  (y == bottom ? lower : normal))))
-//                  [w->orientation];
-//
-//            switch (op->nopts)
-//            {
-//            case 0:
-//                cleanup();
-//                return EXIT_SUCCESS;
-//            case 1:
-//                w->orientation = op->opts[0];
-//                break;
-//            default:
-//                w->orientation = op->opts[rand() % op->nopts];
-//            }
-//
-//            move(y += yinc[w->orientation], x += xinc[w->orientation]);
-//
-//            if (y < 0)
-//                y = 0;
-//
-//            addch(flavor[n % FLAVORS]);
-//            ref[w->ypos[h] = y][w->xpos[h] = x]++;
-//        }
-//        napms(12);
-//        refresh();
-//    }
-        
-        do! napms 12
-        do! refresh ()
-        return! loop ()
-    }    
-
-let run (config: Configuration) =
+let updateWorm worm =
     ncurses {
-        let! win = initscr ()
-        //srand(seed);     
-        do! noecho ()
-        do! cbreak () 
-        do! nonl () 
-        do! keypad win true    
-        do! curs_set 0s     
-        let bottom = LINES () - 1s;
-        let last = COLS () - 1s;
-        do! initColors()
-        let ref = Array2D.zeroCreate<int16> (int (LINES ())) (int (COLS ()))
-
-//#ifdef BADCORNER
-//    /* if addressing the lower right corner doesn't work in your curses */
-//
-//    ref[bottom][last] = 1;
-//#endif
-
-        let worms =
-            [|
-                for i in 1 .. config.Number do
-                    yield Worm.empty config.Length
-            |]
-        
-// TODO: use field string as a repeated background???
-//    if (field)
-//    {
-//        const char *p = field;
-//
-//        for (y = bottom; --y >= 0;)
-//            for (x = COLS; --x >= 0;)
-//            {
-//                addch((chtype) (*p++));
-//
-//                if (!*p)
-//                    p = field;
-//            }
-//    }
-
-        do! napms 12s
-        do! refresh ()
-        do! nodelay win true
-        do! loop worms
-        
-//    for (;;)
-//    {
-//        int ch;
-//
-//        if ((ch = getch()) > 0)
-//        {
-//#ifdef KEY_RESIZE
-//            if (ch == KEY_RESIZE)
-//            {
-//# ifdef PDCURSES
-//                resize_term(0, 0);
-//                erase();
-//# endif
-//                if (last != COLS - 1)
-//                {
-//                    for (y = 0; y <= bottom; y++)
-//                    {
-//                        ref[y] = realloc(ref[y], sizeof(short) * COLS);
-//
-//                        for (x = last + 1; x < COLS; x++)
-//                            ref[y][x] = 0;
-//                    }
-//
-//                    last = COLS - 1;
-//                }
-//
-//                if (bottom != LINES - 1)
-//                {
-//                    for (y = LINES; y <= bottom; y++)
-//                        free(ref[y]);
-//
-//                    ref = realloc(ref, sizeof(short *) * LINES);
-//
-//                    for (y = bottom + 1; y < LINES; y++)
-//                    {
-//                        ref[y] = malloc(sizeof(short) * COLS);
-//
-//                        for (x = 0; x < COLS; x++)
-//                            ref[y][x] = 0;
-//                    }
-//
-//                    bottom = LINES - 1;
-//                }
-//            }
-//
-//#endif /* KEY_RESIZE */
-//
-//            /* Make it simple to put this into single-step mode,
-//               or resume normal operation - T. Dickey */
-//
-//            if (ch == 'q')
-//            {
-//                cleanup();
-//                return EXIT_SUCCESS;
-//            }
-//            else if (ch == 's')
-//                nodelay(stdscr, FALSE);
-//            else if (ch == ' ')
-//                nodelay(stdscr, TRUE);
-//        }
-//
-//        for (n = 0, w = &worm[0]; n < number; n++, w++)
-//        {
+        return ()
 //            if ((x = w->xpos[h = w->head]) < 0)
 //            {
 //                move(y = w->ypos[h] = bottom, x = w->xpos[h] = 0);
@@ -465,11 +303,54 @@ let run (config: Configuration) =
 //
 //            addch(flavor[n % FLAVORS]);
 //            ref[w->ypos[h] = y][w->xpos[h] = x]++;
-//        }
-//        napms(12);
-//        refresh();
-//    }
-     
+    }
+
+let rec loop (worms: Worm array) =
+    ncurses {
+        let! quit = checkUserInput ()
+
+        if quit then
+            return 0
+        else
+            for worm in worms do
+                do! updateWorm worm
+            do! napms 12s
+            do! refresh ()
+            return! loop worms
+    }    
+
+let run (config: Configuration) =
+    ncurses {
+        let! win = initscr ()
+        //srand(seed);     
+        do! noecho ()
+        do! cbreak () 
+        do! nonl () 
+        do! keypad win true    
+        do! curs_set 0s     
+        let bottom = LINES () - 1s;
+        let last = COLS () - 1s;
+        do! initColors()
+        let ref = Array2D.zeroCreate<int16> (int (LINES ())) (int (COLS ()))
+
+//#ifdef BADCORNER
+//    /* if addressing the lower right corner doesn't work in your curses */
+//
+//    ref[bottom][last] = 1;
+//#endif
+
+        let worms =
+            [|
+                for i in 1 .. config.Number do
+                    yield Worm.empty config.Length
+            |]
+        
+        // TODO: use field string as a repeated background???
+        do! napms 12s
+        do! refresh ()
+        // NOTE: in nodelay mode if no input is waiting then getch returns err
+        do! nodelay win true  
+        let! result = loop worms     
         return! cleanup ()
     }
 
