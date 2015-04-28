@@ -57,14 +57,14 @@ Options:
 open Fncurses.Core
 
 let flavor = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] |> Array.map ChType.ofChar
-let xinc = [| 1; 1; 1; 0; -1; -1; -1; 0 |]
-let yinc = [| -1; 0; 1; 1; 1; 0; -1; -1 |]
+let xinc = [| 1s; 1s; 1s; 0s; -1s; -1s; -1s; 0s |]
+let yinc = [| -1s; 0s; 1s; 1s; 1s; 0s; -1s; -1s |]
 
 type Worm =
     { Orientation : int
       Head : int
-      XPos : int array
-      YPos : int array }
+      XPos : CInt array
+      YPos : CInt array }
 with
     static member empty length =
         { Orientation = 0
@@ -76,75 +76,38 @@ let field = ""
 let length = 16
 let number = 3
 let trail = ChType.ofChar ' '
+let rand = System.Random()
 
-type Options = 
-    { Nopts : int
-      Opts : int array }
-with
-    static member make (nopts,opts) = { Nopts = nopts; Opts = opts }
 
-let normal =
-    [|
-        3, [| 7; 0; 1 |]; 3, [| 0; 1; 2 |]; 3, [| 1; 2; 3 |];
-        3, [| 2; 3; 4 |]; 3, [| 3; 4; 5 |]; 3, [| 4; 5; 6 |];
-        3, [| 5; 6; 7 |]; 3, [| 6; 7; 0 |]
-    |] |> Array.map Options.make
+type Bearing =
+    | NW = 6 | N = 7 | NE = 0
+    |  W = 5         |  E = 1
+    | SW = 4 | S = 3 | SE = 2
 
-let upper =
-    [|
-        1, [| 1; 0; 0 |]; 2, [| 1; 2; 0 |]; 0, [| 0; 0; 0 |];
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 2, [| 4; 5; 0 |];
-        1, [| 5; 0; 0 |]; 2, [| 1; 5; 0 |]
-    |] |> Array.map Options.make
-
-let left =
-    [|
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
-        2, [| 2; 3; 0 |]; 1, [| 3; 0; 0 |]; 2, [| 3; 7; 0 |];
-        1, [| 7; 0; 0 |]; 2, [| 7; 0; 0 |]
-    |] |> Array.map Options.make
-
-let right =
-    [|
-        1, [| 7; 0; 0 |]; 2, [| 3; 7; 0 |]; 1, [| 3; 0; 0 |];
-        2, [| 3; 4; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
-        0, [| 0; 0; 0 |]; 2, [| 6; 7; 0 |]
-    |] |> Array.map Options.make
-
-let lower =
-    [|
-        0, [| 0; 0; 0 |]; 2, [| 0; 1; 0 |]; 1, [| 1; 0; 0 |];
-        2, [| 1; 5; 0 |]; 1, [| 5; 0; 0 |]; 2, [| 5; 6; 0 |];
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]
-    |] |> Array.map Options.make
-
-let upleft =
-    [|
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 1, [| 3; 0; 0 |];
-        2, [| 1; 3; 0 |]; 1, [| 1; 0; 0 |]
-    |] |> Array.map Options.make
-
-let upright =
-    [|
-        2, [| 3; 5; 0 |]; 1, [| 3; 0; 0 |]; 0, [| 0; 0; 0 |];
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
-        0, [| 0; 0; 0 |]; 1, [| 5; 0; 0 |]
-    |] |> Array.map Options.make
-
-let lowleft =
-    [|
-        3, [| 7; 0; 1 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
-        1, [| 1; 0; 0 |]; 2, [| 1; 7; 0 |]; 1, [| 7; 0; 0 |];
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]
-    |] |> Array.map Options.make
-
-let lowright =
-    [|
-        0, [| 0; 0; 0 |]; 1, [| 7; 0; 0 |]; 2, [| 5; 7; 0 |];
-        1, [| 5; 0; 0 |]; 0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |];
-        0, [| 0; 0; 0 |]; 0, [| 0; 0; 0 |]
-    |] |> Array.map Options.make
+type Position =
+    |    TopLeft = 0 |    Top = 1 |    TopRight = 2
+    |       Left = 3 | Normal = 4 |       Right = 5
+    | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
+        
+let position bottom last y x =
+    match y, x with
+    | 0s, 0s                             -> Position.TopLeft
+    |  y, 0s when y = bottom             -> Position.BottomLeft
+    |  _, 0s                             -> Position.Left
+    | 0s,  x when x = last               -> Position.TopRight
+    |  y,  x when x = last && y = bottom -> Position.BottomRight
+    |  _,  x when x = last               -> Position.Right
+    | 0s,  _                             -> Position.Top
+    |  y,  _ when y = bottom             -> Position.Bottom
+    |  _,  _                             -> Position.Normal
+    
+let nextBearing (rand: System.Random) (bearingOptions: Bearing [] [,]) bottom last y x (orientation: Bearing) =
+    let position = position bottom last y x
+    let possibleBearings = bearingOptions.[int position, int orientation]
+    match possibleBearings.Length with
+    | 0 -> Result.error (sprintf "no bearing options for position %A and orientation %A" position orientation)
+    | 1 -> Result.result possibleBearings.[0]
+    | n -> Result.result possibleBearings.[rand.Next(0, n - 1)]
 
 let cleanup () =
     ncurses {
@@ -243,59 +206,85 @@ let checkUserInput () =
             return false
     }
 
-let updateWorm worm =
+let bearingOptions =
+    array2D    
+        [| [| [||]; [||]; [||]; [||]; [||]; [|Bearing.S|]; [|Bearing.E; Bearing.S|]; [|Bearing.E|] |]
+           [| [|Bearing.E|]; [|Bearing.E; Bearing.SE|]; [||]; [||]; [||]; [|Bearing.SW; Bearing.W|]; [|Bearing.W|]; [|Bearing.E; Bearing.W|]|]
+           [| [|Bearing.S; Bearing.W|]; [|Bearing.S|]; [||]; [||]; [||]; [||]; [||]; [|Bearing.W|]|]
+           [| [||]; [||]; [||]; [|Bearing.SE; Bearing.S|]; [|Bearing.S|]; [|Bearing.S; Bearing.N|]; [|Bearing.N|]; [|Bearing.N; Bearing.NE|]|]
+           [| [|Bearing.N; Bearing.NE; Bearing.E|]; [|Bearing.NE; Bearing.E; Bearing.SE|]; [|Bearing.E; Bearing.SE; Bearing.S|]; [|Bearing.SE; Bearing.S; Bearing.SW|]; [|Bearing.S; Bearing.SW; Bearing.W|]; [|Bearing.SW; Bearing.W; Bearing.NW|]; [|Bearing.W; Bearing.NW; Bearing.N|]; [|Bearing.NW; Bearing.N; Bearing.NE|]|]
+           [| [|Bearing.N|]; [|Bearing.S; Bearing.N|]; [|Bearing.S|]; [|Bearing.S; Bearing.SW|]; [||]; [||]; [||]; [|Bearing.NW; Bearing.N|]|]
+           [| [|Bearing.N; Bearing.NE; Bearing.E|]; [||]; [||]; [|Bearing.E|]; [|Bearing.E; Bearing.N|]; [|Bearing.N|]; [||]; [||]|]
+           [| [||]; [|Bearing.NE; Bearing.E|]; [|Bearing.E|]; [|Bearing.E; Bearing.W|]; [|Bearing.W|]; [|Bearing.W; Bearing.NW|]; [||]; [||]|]
+           [| [||]; [|Bearing.N|]; [|Bearing.W; Bearing.N|]; [|Bearing.W|]; [||]; [||]; [||]; [||]|] |]
+
+let updateWorm bottom last length trail (worm: Worm) ch (grid: CInt[,]) =
     ncurses {
+        let mutable x = 0s
+        let mutable y = 0s
+        let mutable h = worm.Head
+        x <- worm.XPos.[h]
+        
+        // Correct overshoot left.
+        if x < 0s then
+            x <- 0s; worm.XPos.[h] <- x
+            y <- bottom; worm.YPos.[h] <- y
+            do! move y x
+            do! addch ch
+            grid.[int y, int x] <- grid.[int y, int x] + 1s
+        else
+            y <- worm.YPos.[h]
+
+        // Correct overshoot right. 
+        if x > last then x <- last
+
+        // Correct overshoot lower.
+        if y > bottom then y <- bottom
+
+        h <- h + 1
+        if h = length then h <- 0
+
+        if worm.XPos.[h] >= 0s then
+            let x1 = worm.XPos.[h]
+            let y1 = worm.YPos.[h]
+
+            if y1 < LINES () && x1 < COLS () then
+                grid.[int y1, int x1] <- grid.[int y1, int x1] - 1s
+                if grid.[int y1, int x1] = 0s then
+                    do! move y1 x1
+                    do! addch trail
+
+        let options =
+            match x, y with
+            | 0s, 0s -> upleft
+            | 0s, y when y = bottom  -> lowleft
+            | 0s, _ -> left
+            | x, 0s when x = last -> upright
+            | x, y when x = last && y = bottom -> lowright
+            | x, _ when x = last -> right
+            | _, 0s -> upper
+            | _, y when y = bottom -> lower
+            | _, _ -> normal
+
+        let op = options.[worm.Orientation]
+
+        let! orientation =
+            match op.Nopts with
+            | 0 -> Result.error "no orientation options"
+            | 1 -> Result.result op.Opts.[0]
+            | n -> Result.result op.Opts.[1] // TODO: random 0..n
+
+        y <- y + yinc.[orientation]
+        x <- x + xinc.[orientation]
+        
+        do! move y x
+
+        if y < 0s then y <- 0s
+
+        do! addch ch
+        grid.[int y,int x] <- grid.[int y,int x] + 1s 
         return ()
-//            if ((x = w->xpos[h = w->head]) < 0)
-//            {
-//                move(y = w->ypos[h] = bottom, x = w->xpos[h] = 0);
-//                addch(flavor[n % FLAVORS]);
-//                ref[y][x]++;
-//            }
-//            else
-//                y = w->ypos[h];
-//
-//            if (x > last)
-//                x = last;
-//
-//            if (y > bottom)
-//                y = bottom;
-//
-//            if (++h == length)
-//                h = 0;
-//
-//            if (w->xpos[w->head = h] >= 0)
-//            {
-//                int x1 = w->xpos[h];
-//                int y1 = w->ypos[h];
-//
-//                if (y1 < LINES && x1 < COLS && --ref[y1][x1] == 0)
-//                {
-//                    move(y1, x1);
-//                    addch(trail);
-//                }
-//            }
-//
-//            op = &(x == 0 ? (y == 0 ? upleft :
-//                  (y == bottom ? lowleft : left)) :
-//                  (x == last ? (y == 0 ? upright :
-//                  (y == bottom ? lowright : right)) :
-//                  (y == 0 ? upper :
-//                  (y == bottom ? lower : normal))))
-//                  [w->orientation];
-//
-//            switch (op->nopts)
-//            {
-//            case 0:
-//                cleanup();
-//                return EXIT_SUCCESS;
-//            case 1:
-//                w->orientation = op->opts[0];
-//                break;
-//            default:
-//                w->orientation = op->opts[rand() % op->nopts];
-//            }
-//
+
 //            move(y += yinc[w->orientation], x += xinc[w->orientation]);
 //
 //            if (y < 0)
@@ -331,7 +320,7 @@ let run (config: Configuration) =
         let bottom = LINES () - 1s;
         let last = COLS () - 1s;
         do! initColors()
-        let ref = Array2D.zeroCreate<int16> (int (LINES ())) (int (COLS ()))
+        let grid = Array2D.zeroCreate<CInt> (int (LINES ())) (int (COLS ()))
 
 //#ifdef BADCORNER
 //    /* if addressing the lower right corner doesn't work in your curses */
