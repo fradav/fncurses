@@ -57,20 +57,44 @@ Options:
 open Fncurses.Core
 
 let flavor = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] |> Array.map ChType.ofChar
-let xinc = [| 1s; 1s; 1s; 0s; -1s; -1s; -1s; 0s |]
-let yinc = [| -1s; 0s; 1s; 1s; 1s; 0s; -1s; -1s |]
+        
+type Boundary =
+    { Top : CInt
+      Right : CInt
+      Bottom : CInt
+      Left : CInt }
+with
+    static member make top right bottom left =
+        { Top = top; Right = right; Bottom = bottom; Left = left }    
+
+type Coordinate =
+  { Y : CInt
+    X : CInt }
+with
+  static member make y x =
+    { Y = y; X = x }
+  static member empty =
+    Coordinate.make -1s -1s
+
+type Bearing =
+  | NW = 6 | N = 7 | NE = 0
+  |  W = 5         |  E = 1
+  | SW = 4 | S = 3 | SE = 2
+
+type Position =
+  |    TopLeft = 0 |    Top = 1 |    TopRight = 2
+  |       Left = 3 | Normal = 4 |       Right = 5
+  | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
 
 type Worm =
-    { Orientation : int
-      Head : int
-      XPos : CInt array
-      YPos : CInt array }
+    { Orientation : Bearing
+      HeadIndex : int
+      Body : Coordinate array }
 with
     static member empty length =
-        { Orientation = 0
-          Head = 0
-          XPos = Array.create length -1
-          YPos = Array.create length -1 }
+        { Orientation = Bearing.N
+          HeadIndex = 0
+          Body = Array.create length Coordinate.empty }
         
 let field = ""
 let length = 16
@@ -78,37 +102,38 @@ let number = 3
 let trail = ChType.ofChar ' '
 let rand = System.Random()
 
+//                           NE     E      SE     S       SW       W        NW       N    
+let bearingIncrements =  [| -1s,1s; 0s,1s; 1s,1s; 1s,0s;  1s,-1s;  0s,-1s; -1s,-1s; -1s,0s |]
 
-type Bearing =
-    | NW = 6 | N = 7 | NE = 0
-    |  W = 5         |  E = 1
-    | SW = 4 | S = 3 | SE = 2
-
-type Position =
-    |    TopLeft = 0 |    Top = 1 |    TopRight = 2
-    |       Left = 3 | Normal = 4 |       Right = 5
-    | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
+let isInBoundary boundary coordinate =
+    coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
+    coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
         
-let position bottom last y x =
-    match y, x with
-    | 0s, 0s                             -> Position.TopLeft
-    |  y, 0s when y = bottom             -> Position.BottomLeft
-    |  _, 0s                             -> Position.Left
-    | 0s,  x when x = last               -> Position.TopRight
-    |  y,  x when x = last && y = bottom -> Position.BottomRight
-    |  _,  x when x = last               -> Position.Right
-    | 0s,  _                             -> Position.Top
-    |  y,  _ when y = bottom             -> Position.Bottom
-    |  _,  _                             -> Position.Normal
+let (|CoordinatePosition|_|) boundary coordinate =
+    if isInBoundary boundary coordinate then
+        match coordinate.Y, coordinate.X with
+        | 0s, 0s                                                -> Position.TopLeft
+        |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
+        |  _, 0s                                                -> Position.Left
+        | 0s,  x when x = boundary.Right                        -> Position.TopRight
+        |  y,  x when x = boundary.Right && y = boundary.Bottom -> Position.BottomRight
+        |  _,  x when x = boundary.Right                        -> Position.Right
+        | 0s,  _                                                -> Position.Top
+        |  y,  _ when y = boundary.Bottom                       -> Position.Bottom
+        |  _,  _                                                -> Position.Normal
+        |> Some
+    else
+        None
     
-let nextBearing (rand: System.Random) (bearingOptions: Bearing [] [,]) bottom last y x (orientation: Bearing) =
-    let position = position bottom last y x
-    let possibleBearings = bearingOptions.[int position, int orientation]
-    match possibleBearings.Length with
-    | 0 -> Result.error (sprintf "no bearing options for position %A and orientation %A" position orientation)
-    | 1 -> Result.result possibleBearings.[0]
-    | n -> Result.result possibleBearings.[rand.Next(0, n - 1)]
-
+let nextBearing (rand: System.Random) (bearingOptions: Bearing [] [,]) boundary (orientation: Bearing) =
+    function | CoordinatePosition boundary position ->
+                 let possibleBearings = bearingOptions.[int position, int orientation]
+                 match possibleBearings.Length with
+                 | 0 -> Result.error (sprintf "no bearing options for position %A and orientation %A" position orientation)
+                 | 1 -> Result.result possibleBearings.[0]
+                 | n -> Result.result possibleBearings.[rand.Next(0, n - 1)]
+             | coordinate -> Result.error (sprintf "the coordinate %A is out-of-bounds" coordinate)
+        
 let cleanup () =
     ncurses {
         do! standend ()
@@ -133,7 +158,7 @@ with
             | Number _ -> "specify the number of worms."
             | Trail _ -> "trail."
 
-type Configuration = 
+type Environment = 
     { Field: string
       Length: int
       Number: int
@@ -156,7 +181,7 @@ let config (args:ArgParseResults<Arguments>) =
     let length = args.GetResult <@ Length @>
     let number = args.GetResult <@ Number @>
     let trail = if args.Contains <@ Trail @> then ' ' else '.'
-    Configuration.make(field, length, number, ChType.ofChar trail)
+    Environment.make(field, length, number, ChType.ofChar trail)
 
 let SET_COLOR(num, fg, bg) =
    ncurses {
@@ -218,80 +243,34 @@ let bearingOptions =
            [| [||]; [|Bearing.NE; Bearing.E|]; [|Bearing.E|]; [|Bearing.E; Bearing.W|]; [|Bearing.W|]; [|Bearing.W; Bearing.NW|]; [||]; [||]|]
            [| [||]; [|Bearing.N|]; [|Bearing.W; Bearing.N|]; [|Bearing.W|]; [||]; [||]; [||]; [||]|] |]
 
-let updateWorm bottom last length trail (worm: Worm) ch (grid: CInt[,]) =
+let updateWorm boundary length trailCh wormCh (refCounts: CInt[,]) (worm: Worm) =
     ncurses {
-        let mutable x = 0s
-        let mutable y = 0s
-        let mutable h = worm.Head
-        x <- worm.XPos.[h]
+        let head = worm.Body.[worm.HeadIndex]
+        let tail = worm.Body.[(worm.HeadIndex + 1) % length]
         
-        // Correct overshoot left.
-        if x < 0s then
-            x <- 0s; worm.XPos.[h] <- x
-            y <- bottom; worm.YPos.[h] <- y
-            do! move y x
-            do! addch ch
-            grid.[int y, int x] <- grid.[int y, int x] + 1s
-        else
-            y <- worm.YPos.[h]
+        // Replace the worm character at the tail coordinate with the trail character.
+        if isInBoundary boundary tail then
+            refCounts.[int tail.Y, int tail.X] <- refCounts.[int tail.Y, int tail.X] - 1s
+            if refCounts.[int tail.Y, int tail.X] = 0s then
+                do! move tail.Y tail.X
+                do! addch trailCh
 
-        // Correct overshoot right. 
-        if x > last then x <- last
+        // Work out the next head coordinate.
+        let! nextBearing = nextBearing rand bearingOptions boundary worm.Orientation head
+        let yIncrement,xIncrement = bearingIncrements.[int nextBearing]
+        let nextHead = Coordinate.make (head.Y + yIncrement) (head.X + xIncrement)
 
-        // Correct overshoot lower.
-        if y > bottom then y <- bottom
+        // Add the worm character at the next head coordinate.
+        if isInBoundary boundary nextHead then
+            do! move nextHead.Y nextHead.X
+            do! addch wormCh
+            refCounts.[int nextHead.Y,int nextHead.X] <- refCounts.[int nextHead.Y,int nextHead.X] + 1s
 
-        h <- h + 1
-        if h = length then h <- 0
-
-        if worm.XPos.[h] >= 0s then
-            let x1 = worm.XPos.[h]
-            let y1 = worm.YPos.[h]
-
-            if y1 < LINES () && x1 < COLS () then
-                grid.[int y1, int x1] <- grid.[int y1, int x1] - 1s
-                if grid.[int y1, int x1] = 0s then
-                    do! move y1 x1
-                    do! addch trail
-
-        let options =
-            match x, y with
-            | 0s, 0s -> upleft
-            | 0s, y when y = bottom  -> lowleft
-            | 0s, _ -> left
-            | x, 0s when x = last -> upright
-            | x, y when x = last && y = bottom -> lowright
-            | x, _ when x = last -> right
-            | _, 0s -> upper
-            | _, y when y = bottom -> lower
-            | _, _ -> normal
-
-        let op = options.[worm.Orientation]
-
-        let! orientation =
-            match op.Nopts with
-            | 0 -> Result.error "no orientation options"
-            | 1 -> Result.result op.Opts.[0]
-            | n -> Result.result op.Opts.[1] // TODO: random 0..n
-
-        y <- y + yinc.[orientation]
-        x <- x + xinc.[orientation]
-        
-        do! move y x
-
-        if y < 0s then y <- 0s
-
-        do! addch ch
-        grid.[int y,int x] <- grid.[int y,int x] + 1s 
-        return ()
-
-//            move(y += yinc[w->orientation], x += xinc[w->orientation]);
-//
-//            if (y < 0)
-//                y = 0;
-//
-//            addch(flavor[n % FLAVORS]);
-//            ref[w->ypos[h] = y][w->xpos[h] = x]++;
+        // Return an update worm.
+        return { worm with
+                   Orientation = nextBearing
+                   HeadIndex = (worm.HeadIndex + 1) % length
+                   (* Body = ??? *) }
     }
 
 let rec loop (worms: Worm array) =
@@ -301,14 +280,15 @@ let rec loop (worms: Worm array) =
         if quit then
             return 0
         else
-            for worm in worms do
-                do! updateWorm worm
+            let! worms' = NcursesArray.map updateWorm worms |> Result.mapError (fun ss -> String.concat "\n" ss)
+            //for worm in worms do
+            //    do! updateWorm worm
             do! napms 12s
             do! refresh ()
-            return! loop worms
+            return! loop worms'
     }    
 
-let run (config: Configuration) =
+let run (env: Environment) =
     ncurses {
         let! win = initscr ()
         //srand(seed);     
@@ -320,7 +300,7 @@ let run (config: Configuration) =
         let bottom = LINES () - 1s;
         let last = COLS () - 1s;
         do! initColors()
-        let grid = Array2D.zeroCreate<CInt> (int (LINES ())) (int (COLS ()))
+        let refCounts = Array2D.zeroCreate<CInt> (int (LINES ())) (int (COLS ()))
 
 //#ifdef BADCORNER
 //    /* if addressing the lower right corner doesn't work in your curses */
@@ -330,8 +310,8 @@ let run (config: Configuration) =
 
         let worms =
             [|
-                for i in 1 .. config.Number do
-                    yield Worm.empty config.Length
+                for i in 1 .. env.Number do
+                    yield Worm.empty env.Length
             |]
         
         // TODO: use field string as a repeated background???
