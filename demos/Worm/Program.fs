@@ -55,8 +55,6 @@ Options:
 *)
 
 open Fncurses.Core
-
-let flavor = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] |> Array.map ChType.ofChar
         
 type Boundary =
     { Top : CInt
@@ -87,12 +85,14 @@ type Position =
   | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
 
 type Worm =
-    { Orientation : Bearing
+    { Character : char
+      Orientation : Bearing
       HeadIndex : int
       Body : Coordinate array }
 with
-    static member empty length =
-        { Orientation = Bearing.N
+    static member empty length ch =
+        { Character = ch
+          Orientation = Bearing.N
           HeadIndex = 0
           Body = Array.create length Coordinate.empty }
         
@@ -158,18 +158,20 @@ with
             | Number _ -> "specify the number of worms."
             | Trail _ -> "trail."
 
-type Environment = 
+type Configuration = 
     { Field: string
       Length: int
       Number: int
-      Trail: ChType }
+      TrailCharacter: char
+      WormCharacters: char array }
 with
-    static member make (field,length,number,trail) =
+    static member make (field, length, number, trailCharacter, wormCharacters) =
         {
             Field = field
             Length = length
             Number = number
-            Trail = trail
+            TrailCharacter = trailCharacter
+            WormCharacters = wormCharacters
         } 
 
 let parser = UnionArgParser.Create<Arguments>()
@@ -181,12 +183,14 @@ let config (args:ArgParseResults<Arguments>) =
     let length = args.GetResult <@ Length @>
     let number = args.GetResult <@ Number @>
     let trail = if args.Contains <@ Trail @> then ' ' else '.'
-    Environment.make(field, length, number, ChType.ofChar trail)
+    let wormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |]        
+    Configuration.make(field, length, number, trail, wormCharacters)
 
-let SET_COLOR(num, fg, bg) =
+let SET_COLOR (num, fg, bg) =
    ncurses {
        do! init_pair (num + CInt.one) fg bg
-       do flavor.[int num] <- flavor.[int num] ||| Color.COLOR_PAIR(num + CInt.one) ||| Attribute.A_BOLD
+       // TODO: what does flavor do?
+       //do flavor.[int num] <- flavor.[int num] ||| Color.COLOR_PAIR(num + CInt.one) ||| Attribute.A_BOLD
    }
 
 let initColors () =
@@ -243,17 +247,17 @@ let bearingOptions =
            [| [||]; [|Bearing.NE; Bearing.E|]; [|Bearing.E|]; [|Bearing.E; Bearing.W|]; [|Bearing.W|]; [|Bearing.W; Bearing.NW|]; [||]; [||]|]
            [| [||]; [|Bearing.N|]; [|Bearing.W; Bearing.N|]; [|Bearing.W|]; [||]; [||]; [||]; [||]|] |]
 
-let updateWorm boundary length trailCh wormCh (refCounts: CInt[,]) (worm: Worm) =
+let updateWorm config boundary (refCounts: CInt[,]) (worm: Worm) =
     ncurses {
         let head = worm.Body.[worm.HeadIndex]
-        let tail = worm.Body.[(worm.HeadIndex + 1) % length]
+        let tail = worm.Body.[(worm.HeadIndex + 1) % env.Length]
         
         // Replace the worm character at the tail coordinate with the trail character.
         if isInBoundary boundary tail then
             refCounts.[int tail.Y, int tail.X] <- refCounts.[int tail.Y, int tail.X] - 1s
             if refCounts.[int tail.Y, int tail.X] = 0s then
                 do! move tail.Y tail.X
-                do! addch trailCh
+                do! addch config.TrailCharacter
 
         // Work out the next head coordinate.
         let! nextBearing = nextBearing rand bearingOptions boundary worm.Orientation head
@@ -263,7 +267,7 @@ let updateWorm boundary length trailCh wormCh (refCounts: CInt[,]) (worm: Worm) 
         // Add the worm character at the next head coordinate.
         if isInBoundary boundary nextHead then
             do! move nextHead.Y nextHead.X
-            do! addch wormCh
+            do! addch worm.Character
             refCounts.[int nextHead.Y,int nextHead.X] <- refCounts.[int nextHead.Y,int nextHead.X] + 1s
 
         // Return an update worm.
@@ -273,22 +277,20 @@ let updateWorm boundary length trailCh wormCh (refCounts: CInt[,]) (worm: Worm) 
                    (* Body = ??? *) }
     }
 
-let rec loop (worms: Worm array) =
+let rec loop config boundary refCounts (worms: Worm array) =
     ncurses {
         let! quit = checkUserInput ()
 
         if quit then
             return 0
         else
-            let! worms' = NcursesArray.map updateWorm worms |> Result.mapError (fun ss -> String.concat "\n" ss)
-            //for worm in worms do
-            //    do! updateWorm worm
+            let! worms' = NcursesArray.map (updateWorm config boundary refCounts) worms
             do! napms 12s
             do! refresh ()
-            return! loop worms'
+            return! loop config boundary refCounts worms'
     }    
 
-let run (env: Environment) =
+let run (config: Configuration) =
     ncurses {
         let! win = initscr ()
         //srand(seed);     
@@ -296,9 +298,8 @@ let run (env: Environment) =
         do! cbreak () 
         do! nonl () 
         do! keypad win true    
-        do! curs_set 0s     
-        let bottom = LINES () - 1s;
-        let last = COLS () - 1s;
+        do! curs_set 0s
+        let boundary = Boundary.make 0s (COLS () - 1s) (LINES () - 1s) 0s     
         do! initColors()
         let refCounts = Array2D.zeroCreate<CInt> (int (LINES ())) (int (COLS ()))
 
@@ -310,8 +311,9 @@ let run (env: Environment) =
 
         let worms =
             [|
-                for i in 1 .. env.Number do
-                    yield Worm.empty env.Length
+                for i in 1 .. config.Number do
+                    let ch = config.WormCharacters.[i % config.WormCharacters.Length]
+                    yield Worm.empty config.Length ch
             |]
         
         // TODO: use field string as a repeated background???
@@ -319,7 +321,7 @@ let run (env: Environment) =
         do! refresh ()
         // NOTE: in nodelay mode if no input is waiting then getch returns err
         do! nodelay win true  
-        let! result = loop worms     
+        let! result = loop config boundary refCounts worms     
         return! cleanup ()
     }
 

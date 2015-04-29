@@ -252,9 +252,9 @@ module NcursesArray =
         // If the error was set, return it; otherwise, return the array of results.
         match error with
         | Some error ->
-            Success error
+            Failure error
         | None ->
-            Failure results
+            Success results
 
     //
     [<CompiledName("MapIndexed")>]
