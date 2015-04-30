@@ -93,27 +93,43 @@ module DomainTypes =
           WormCharacters: char array }
 
 
+module Boundary =
+
+  let make (top, right, bottom, left) =
+    { Top = top
+      Right = right
+      Bottom = bottom
+      Left = left }    
+
+  let contains boundary coordinate =
+    coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
+    coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
+
+
 module Coordinate =
 
     let make (y, x) =
         { Y = y
           X = x }
         
-    let empty = Coordinate.make -1s -1s
+    let empty = make (-1s, -1s)
 
+    let (|Position|_|) boundary coordinate =
+      if Boundary.contains boundary coordinate then
+        match coordinate.Y, coordinate.X with
+        | 0s, 0s                                                -> Position.TopLeft
+        |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
+        |  _, 0s                                                -> Position.Left
+        | 0s,  x when x = boundary.Right                        -> Position.TopRight
+        |  y,  x when x = boundary.Right && y = boundary.Bottom -> Position.BottomRight
+        |  _,  x when x = boundary.Right                        -> Position.Right
+        | 0s,  _                                                -> Position.Top
+        |  y,  _ when y = boundary.Bottom                       -> Position.Bottom
+        |  _,  _                                                -> Position.Normal
+        |> Some
+      else
+            None
         
-module Boundary =
-
-    let make (top, right, bottom, left) =
-        { Top = top
-          Right = right
-          Bottom = bottom
-          Left = left }    
-  
-    let contains boundary coordinate =
-      coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
-      coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
-
 
 module Configuration =
 
@@ -126,19 +142,59 @@ module Configuration =
 
 
 module Worm =
-        
+    
+    let bearingOptions =
+        array2D    
+            [| [| [||]; [||]; [||]; [||]; [||]; [|Bearing.S|]; [|Bearing.E; Bearing.S|]; [|Bearing.E|] |]
+               [| [|Bearing.E|]; [|Bearing.E; Bearing.SE|]; [||]; [||]; [||]; [|Bearing.SW; Bearing.W|]; [|Bearing.W|]; [|Bearing.E; Bearing.W|]|]
+               [| [|Bearing.S; Bearing.W|]; [|Bearing.S|]; [||]; [||]; [||]; [||]; [||]; [|Bearing.W|]|]
+               [| [||]; [||]; [||]; [|Bearing.SE; Bearing.S|]; [|Bearing.S|]; [|Bearing.S; Bearing.N|]; [|Bearing.N|]; [|Bearing.N; Bearing.NE|]|]
+               [| [|Bearing.N; Bearing.NE; Bearing.E|]; [|Bearing.NE; Bearing.E; Bearing.SE|]; [|Bearing.E; Bearing.SE; Bearing.S|]; [|Bearing.SE; Bearing.S; Bearing.SW|]; [|Bearing.S; Bearing.SW; Bearing.W|]; [|Bearing.SW; Bearing.W; Bearing.NW|]; [|Bearing.W; Bearing.NW; Bearing.N|]; [|Bearing.NW; Bearing.N; Bearing.NE|]|]
+               [| [|Bearing.N|]; [|Bearing.S; Bearing.N|]; [|Bearing.S|]; [|Bearing.S; Bearing.SW|]; [||]; [||]; [||]; [|Bearing.NW; Bearing.N|]|]
+               [| [|Bearing.N; Bearing.NE; Bearing.E|]; [||]; [||]; [|Bearing.E|]; [|Bearing.E; Bearing.N|]; [|Bearing.N|]; [||]; [||]|]
+               [| [||]; [|Bearing.NE; Bearing.E|]; [|Bearing.E|]; [|Bearing.E; Bearing.W|]; [|Bearing.W|]; [|Bearing.W; Bearing.NW|]; [||]; [||]|]
+               [| [||]; [|Bearing.N|]; [|Bearing.W; Bearing.N|]; [|Bearing.W|]; [||]; [||]; [||]; [||]|] |]
+
+    //                           NE     E      SE     S       SW       W        NW       N    
+    let bearingIncrements =  [| -1s,1s; 0s,1s; 1s,1s; 1s,0s;  1s,-1s;  0s,-1s; -1s,-1s; -1s,0s |]
+           
     let empty length ch =
         { Character = ch
           Bearing = Bearing.N
           HeadIndex = 0
           Body = Array.create length Coordinate.empty }
 
-    let headCoordinate worm =
+    let head worm =
         worm.Body.[worm.HeadIndex]
 
-    let tailCoordinate worm =
+    let tail worm =
         worm.Body.[(worm.HeadIndex + 1) % worm.Body.Length]
+        
+    let nextBearing (rand: System.Random) boundary (bearing: Bearing) =
+        function | Coordinate.Position boundary position ->
+                       let possibleNextBearings = bearingOptions.[int position, int bearing]
+                       match possibleNextBearings.Length with
+                       | 0 -> Result.error (sprintf "no possible next bearing for position %A and bearing %A" position bearing)
+                       | 1 -> Result.result possibleNextBearings.[0]
+                       | n -> Result.result possibleNextBearings.[rand.Next(0, n - 1)]
+                 | coordinate -> Result.error (sprintf "the coordinate %A is out-of-bounds" coordinate)        
 
+    let wiggle rand boundary worm =
+        ncurses {
+            let head = head worm
+            let! nextBearing = nextBearing rand boundary worm.Bearing head
+            let yIncrement,xIncrement = bearingIncrements.[int nextBearing]
+            let nextHead = Coordinate.make (head.Y + yIncrement, head.X + xIncrement)
+            let nextHeadIndex = (worm.HeadIndex + 1) % worm.Body.Length
+            let nextBody = Array.copy worm.Body
+            nextBody.[nextHeadIndex] <- nextHead
+            return
+                { worm with
+                    Bearing = nextBearing
+                    HeadIndex = nextHeadIndex
+                    Body = nextBody }
+        }
+        
         
 let field = ""
 let length = 16
@@ -146,34 +202,6 @@ let number = 3
 let trail = ChType.ofChar ' '
 let rand = System.Random()
 
-//                           NE     E      SE     S       SW       W        NW       N    
-let bearingIncrements =  [| -1s,1s; 0s,1s; 1s,1s; 1s,0s;  1s,-1s;  0s,-1s; -1s,-1s; -1s,0s |]
-
-let (|CoordinatePosition|_|) boundary coordinate =
-    if Boundary.contains boundary coordinate then
-        match coordinate.Y, coordinate.X with
-        | 0s, 0s                                                -> Position.TopLeft
-        |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
-        |  _, 0s                                                -> Position.Left
-        | 0s,  x when x = boundary.Right                        -> Position.TopRight
-        |  y,  x when x = boundary.Right && y = boundary.Bottom -> Position.BottomRight
-        |  _,  x when x = boundary.Right                        -> Position.Right
-        | 0s,  _                                                -> Position.Top
-        |  y,  _ when y = boundary.Bottom                       -> Position.Bottom
-        |  _,  _                                                -> Position.Normal
-        |> Some
-    else
-        None
-    
-let nextBearing (rand: System.Random) (bearingOptions: Bearing [] [,]) boundary (bearing: Bearing) =
-    function | CoordinatePosition boundary position ->
-                 let possibleNextBearings = bearingOptions.[int position, int bearing]
-                 match possibleNextBearings.Length with
-                 | 0 -> Result.error (sprintf "no possible next bearing for position %A and bearing %A" position bearing)
-                 | 1 -> Result.result possibleNextBearings.[0]
-                 | n -> Result.result possibleNextBearings.[rand.Next(0, n - 1)]
-             | coordinate -> Result.error (sprintf "the coordinate %A is out-of-bounds" coordinate)
-        
 let cleanup () =
     ncurses {
         do! standend ()
@@ -260,46 +288,38 @@ let checkUserInput () =
             return false
     }
 
-let bearingOptions =
-    array2D    
-        [| [| [||]; [||]; [||]; [||]; [||]; [|Bearing.S|]; [|Bearing.E; Bearing.S|]; [|Bearing.E|] |]
-           [| [|Bearing.E|]; [|Bearing.E; Bearing.SE|]; [||]; [||]; [||]; [|Bearing.SW; Bearing.W|]; [|Bearing.W|]; [|Bearing.E; Bearing.W|]|]
-           [| [|Bearing.S; Bearing.W|]; [|Bearing.S|]; [||]; [||]; [||]; [||]; [||]; [|Bearing.W|]|]
-           [| [||]; [||]; [||]; [|Bearing.SE; Bearing.S|]; [|Bearing.S|]; [|Bearing.S; Bearing.N|]; [|Bearing.N|]; [|Bearing.N; Bearing.NE|]|]
-           [| [|Bearing.N; Bearing.NE; Bearing.E|]; [|Bearing.NE; Bearing.E; Bearing.SE|]; [|Bearing.E; Bearing.SE; Bearing.S|]; [|Bearing.SE; Bearing.S; Bearing.SW|]; [|Bearing.S; Bearing.SW; Bearing.W|]; [|Bearing.SW; Bearing.W; Bearing.NW|]; [|Bearing.W; Bearing.NW; Bearing.N|]; [|Bearing.NW; Bearing.N; Bearing.NE|]|]
-           [| [|Bearing.N|]; [|Bearing.S; Bearing.N|]; [|Bearing.S|]; [|Bearing.S; Bearing.SW|]; [||]; [||]; [||]; [|Bearing.NW; Bearing.N|]|]
-           [| [|Bearing.N; Bearing.NE; Bearing.E|]; [||]; [||]; [|Bearing.E|]; [|Bearing.E; Bearing.N|]; [|Bearing.N|]; [||]; [||]|]
-           [| [||]; [|Bearing.NE; Bearing.E|]; [|Bearing.E|]; [|Bearing.E; Bearing.W|]; [|Bearing.W|]; [|Bearing.W; Bearing.NW|]; [||]; [||]|]
-           [| [||]; [|Bearing.N|]; [|Bearing.W; Bearing.N|]; [|Bearing.W|]; [||]; [||]; [||]; [||]|] |]
+let display coordinate ch =
+    ncurses {
+        do! move coordinate.Y coordinate.X
+        do! addch ch
+    }
+
+let decrementRefCount (refCounts: CInt[,]) coordinate =
+    let refCount = refCounts.[int coordinate.Y, int coordinate.X] - 1s
+    refCounts.[int coordinate.Y, int coordinate.X] <- refCount
+    refCount
+                
+let incrementRefCount (refCounts: CInt[,]) coordinate =
+    let refCount = refCounts.[int coordinate.Y, int coordinate.X] + 1s
+    refCounts.[int coordinate.Y, int coordinate.X] <- refCount
 
 let updateWorm config boundary (refCounts: CInt[,]) (worm: Worm) =
     ncurses {
-        let head = worm.Body.[worm.HeadIndex]
-        let tail = worm.Body.[(worm.HeadIndex + 1) % worm.Body.Length]
+        let! worm' = Worm.wiggle rand boundary worm
+        let tail = Worm.tail worm
+        let head = Worm.head worm'
+
+        if Boundary.contains boundary tail then
+            let tailRefCount = decrementRefCount refCounts tail
+            if tailRefCount = 0s then
+                do! display tail config.TrailCharacter
         
-        // Replace the worm character at the tail coordinate with the trail character.
-        if isInBoundary boundary tail then
-            refCounts.[int tail.Y, int tail.X] <- refCounts.[int tail.Y, int tail.X] - 1s
-            if refCounts.[int tail.Y, int tail.X] = 0s then
-                do! move tail.Y tail.X
-                do! addch config.TrailCharacter
+        
+        if Boundary.contains boundary head then
+            do! display head worm.Character
+            incrementRefCount refCounts head
 
-        // Work out the next head coordinate.
-        let! nextBearing = nextBearing rand bearingOptions boundary worm.Orientation head
-        let yIncrement,xIncrement = bearingIncrements.[int nextBearing]
-        let nextHead = Coordinate.make (head.Y + yIncrement) (head.X + xIncrement)
-
-        // Add the worm character at the next head coordinate.
-        if isInBoundary boundary nextHead then
-            do! move nextHead.Y nextHead.X
-            do! addch worm.Character
-            refCounts.[int nextHead.Y,int nextHead.X] <- refCounts.[int nextHead.Y,int nextHead.X] + 1s
-
-        // Return an update worm.
-        return { worm with
-                   Orientation = nextBearing
-                   HeadIndex = (worm.HeadIndex + 1) % length
-                   (* Body = ??? *) }
+        return worm'
     }
 
 let rec loop config boundary refCounts (worms: Worm array) =
@@ -324,7 +344,7 @@ let run (config: Configuration) =
         do! nonl () 
         do! keypad win true    
         do! curs_set 0s
-        let boundary = Boundary.make 0s (COLS () - 1s) (LINES () - 1s) 0s     
+        let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
         do! initColors()
         let refCounts = Array2D.zeroCreate<CInt> (int (LINES ())) (int (COLS ()))
 
