@@ -55,46 +55,90 @@ Options:
 *)
 
 open Fncurses.Core
+
+[<AutoOpen>]
+module DomainTypes =
+                
+    type Boundary =
+        { Top : CInt
+          Right : CInt
+          Bottom : CInt
+          Left : CInt }
+    
+    type Coordinate =
+      { Y : CInt
+        X : CInt }
+     
+    type Bearing =
+      | NW = 6 | N = 7 | NE = 0
+      |  W = 5         |  E = 1
+      | SW = 4 | S = 3 | SE = 2
+    
+    type Position =
+      |    TopLeft = 0 |    Top = 1 |    TopRight = 2
+      |       Left = 3 | Normal = 4 |       Right = 5
+      | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
+    
+    type Worm =
+        { Character : char
+          Bearing : Bearing
+          HeadIndex : int
+          Body : Coordinate array }        
+
+    type Configuration = 
+        { Field: string
+          WormLength: int
+          WormCount: int
+          TrailCharacter: char
+          WormCharacters: char array }
+
+
+module Coordinate =
+
+    let make (y, x) =
+        { Y = y
+          X = x }
         
-type Boundary =
-    { Top : CInt
-      Right : CInt
-      Bottom : CInt
-      Left : CInt }
-with
-    static member make top right bottom left =
-        { Top = top; Right = right; Bottom = bottom; Left = left }    
+    let empty = Coordinate.make -1s -1s
 
-type Coordinate =
-  { Y : CInt
-    X : CInt }
-with
-  static member make y x =
-    { Y = y; X = x }
-  static member empty =
-    Coordinate.make -1s -1s
+        
+module Boundary =
 
-type Bearing =
-  | NW = 6 | N = 7 | NE = 0
-  |  W = 5         |  E = 1
-  | SW = 4 | S = 3 | SE = 2
+    let make (top, right, bottom, left) =
+        { Top = top
+          Right = right
+          Bottom = bottom
+          Left = left }    
+  
+    let contains boundary coordinate =
+      coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
+      coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
 
-type Position =
-  |    TopLeft = 0 |    Top = 1 |    TopRight = 2
-  |       Left = 3 | Normal = 4 |       Right = 5
-  | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
 
-type Worm =
-    { Character : char
-      Orientation : Bearing
-      HeadIndex : int
-      Body : Coordinate array }
-with
-    static member empty length ch =
+module Configuration =
+
+    let make (field, wormLength, wormCount, trailCharacter, wormCharacters) =
+        { Field = field
+          WormLength = wormLength
+          WormCount = wormCount
+          TrailCharacter = trailCharacter
+          WormCharacters = wormCharacters } 
+
+
+module Worm =
+        
+    let empty length ch =
         { Character = ch
-          Orientation = Bearing.N
+          Bearing = Bearing.N
           HeadIndex = 0
           Body = Array.create length Coordinate.empty }
+
+    let headCoordinate worm =
+        worm.Body.[worm.HeadIndex]
+
+    let tailCoordinate worm =
+        worm.Body.[(worm.HeadIndex + 1) % worm.Body.Length]
+
         
 let field = ""
 let length = 16
@@ -105,12 +149,8 @@ let rand = System.Random()
 //                           NE     E      SE     S       SW       W        NW       N    
 let bearingIncrements =  [| -1s,1s; 0s,1s; 1s,1s; 1s,0s;  1s,-1s;  0s,-1s; -1s,-1s; -1s,0s |]
 
-let isInBoundary boundary coordinate =
-    coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
-    coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
-        
 let (|CoordinatePosition|_|) boundary coordinate =
-    if isInBoundary boundary coordinate then
+    if Boundary.contains boundary coordinate then
         match coordinate.Y, coordinate.X with
         | 0s, 0s                                                -> Position.TopLeft
         |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
@@ -125,13 +165,13 @@ let (|CoordinatePosition|_|) boundary coordinate =
     else
         None
     
-let nextBearing (rand: System.Random) (bearingOptions: Bearing [] [,]) boundary (orientation: Bearing) =
+let nextBearing (rand: System.Random) (bearingOptions: Bearing [] [,]) boundary (bearing: Bearing) =
     function | CoordinatePosition boundary position ->
-                 let possibleBearings = bearingOptions.[int position, int orientation]
-                 match possibleBearings.Length with
-                 | 0 -> Result.error (sprintf "no bearing options for position %A and orientation %A" position orientation)
-                 | 1 -> Result.result possibleBearings.[0]
-                 | n -> Result.result possibleBearings.[rand.Next(0, n - 1)]
+                 let possibleNextBearings = bearingOptions.[int position, int bearing]
+                 match possibleNextBearings.Length with
+                 | 0 -> Result.error (sprintf "no possible next bearing for position %A and bearing %A" position bearing)
+                 | 1 -> Result.result possibleNextBearings.[0]
+                 | n -> Result.result possibleNextBearings.[rand.Next(0, n - 1)]
              | coordinate -> Result.error (sprintf "the coordinate %A is out-of-bounds" coordinate)
         
 let cleanup () =
@@ -158,21 +198,6 @@ with
             | Number _ -> "specify the number of worms."
             | Trail _ -> "trail."
 
-type Configuration = 
-    { Field: string
-      Length: int
-      Number: int
-      TrailCharacter: char
-      WormCharacters: char array }
-with
-    static member make (field, length, number, trailCharacter, wormCharacters) =
-        {
-            Field = field
-            Length = length
-            Number = number
-            TrailCharacter = trailCharacter
-            WormCharacters = wormCharacters
-        } 
 
 let parser = UnionArgParser.Create<Arguments>()
 
@@ -180,11 +205,11 @@ let usage = parser.Usage()
 
 let config (args:ArgParseResults<Arguments>) = 
     let field = if args.Contains <@ Field @> then "WORM" else ""
-    let length = args.GetResult <@ Length @>
-    let number = args.GetResult <@ Number @>
-    let trail = if args.Contains <@ Trail @> then ' ' else '.'
+    let wormLength = args.GetResult <@ Length @>
+    let wormCount = args.GetResult <@ Number @>
+    let trailCharacter = if args.Contains <@ Trail @> then ' ' else '.'
     let wormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |]        
-    Configuration.make(field, length, number, trail, wormCharacters)
+    Configuration.make(field, wormLength, wormCount, trailCharacter, wormCharacters)
 
 let SET_COLOR (num, fg, bg) =
    ncurses {
@@ -250,7 +275,7 @@ let bearingOptions =
 let updateWorm config boundary (refCounts: CInt[,]) (worm: Worm) =
     ncurses {
         let head = worm.Body.[worm.HeadIndex]
-        let tail = worm.Body.[(worm.HeadIndex + 1) % env.Length]
+        let tail = worm.Body.[(worm.HeadIndex + 1) % worm.Body.Length]
         
         // Replace the worm character at the tail coordinate with the trail character.
         if isInBoundary boundary tail then
@@ -310,11 +335,9 @@ let run (config: Configuration) =
 //#endif
 
         let worms =
-            [|
-                for i in 1 .. config.Number do
-                    let ch = config.WormCharacters.[i % config.WormCharacters.Length]
-                    yield Worm.empty config.Length ch
-            |]
+            [| for i in 1 .. config.WormCount do
+                   let ch = config.WormCharacters.[i % config.WormCharacters.Length]
+                   yield Worm.empty config.WormLength ch |]
         
         // TODO: use field string as a repeated background???
         do! napms 12s
