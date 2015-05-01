@@ -66,18 +66,18 @@ module DomainTypes =
           Left : CInt }
     
     type Coordinate =
-      { Y : CInt
-        X : CInt }
+        { Y : CInt
+          X : CInt }
      
     type Bearing =
-      | NW = 6 | N = 7 | NE = 0
-      |  W = 5         |  E = 1
-      | SW = 4 | S = 3 | SE = 2
+        | NW = 6 | N = 7 | NE = 0
+        |  W = 5         |  E = 1
+        | SW = 4 | S = 3 | SE = 2
     
     type Position =
-      |    TopLeft = 0 |    Top = 1 |    TopRight = 2
-      |       Left = 3 | Normal = 4 |       Right = 5
-      | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
+        |    TopLeft = 0 |    Top = 1 |    TopRight = 2
+        |       Left = 3 | Normal = 4 |       Right = 5
+        | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
     
     type Worm =
         { Character : char
@@ -86,7 +86,8 @@ module DomainTypes =
           Body : Coordinate array }        
 
     type Configuration = 
-        { Field: string
+        { Random: System.Random
+          Field: string
           WormLength: int
           WormCount: int
           TrailCharacter: char
@@ -96,14 +97,14 @@ module DomainTypes =
 module Boundary =
 
   let make (top, right, bottom, left) =
-    { Top = top
-      Right = right
-      Bottom = bottom
-      Left = left }    
+      { Top = top
+        Right = right
+        Bottom = bottom
+        Left = left }    
 
   let contains boundary coordinate =
-    coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
-    coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
+      coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
+      coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
 
 
 module Coordinate =
@@ -134,7 +135,8 @@ module Coordinate =
 module Configuration =
 
     let make (field, wormLength, wormCount, trailCharacter, wormCharacters) =
-        { Field = field
+        { Random = System.Random()
+          Field = field
           WormLength = wormLength
           WormCount = wormCount
           TrailCharacter = trailCharacter
@@ -170,19 +172,19 @@ module Worm =
     let tail worm =
         worm.Body.[(worm.HeadIndex + 1) % worm.Body.Length]
         
-    let nextBearing (rand: System.Random) boundary (bearing: Bearing) =
+    let nextBearing (random: System.Random) boundary (bearing: Bearing) =
         function | Coordinate.Position boundary position ->
                        let possibleNextBearings = bearingOptions.[int position, int bearing]
                        match possibleNextBearings.Length with
                        | 0 -> Result.error (sprintf "no possible next bearing for position %A and bearing %A" position bearing)
                        | 1 -> Result.result possibleNextBearings.[0]
-                       | n -> Result.result possibleNextBearings.[rand.Next(0, n - 1)]
+                       | n -> Result.result possibleNextBearings.[random.Next(0, n - 1)]
                  | coordinate -> Result.error (sprintf "the coordinate %A is out-of-bounds" coordinate)        
 
-    let wiggle rand boundary worm =
+    let wiggle random boundary worm =
         ncurses {
             let head = head worm
-            let! nextBearing = nextBearing rand boundary worm.Bearing head
+            let! nextBearing = nextBearing random boundary worm.Bearing head
             let yIncrement,xIncrement = bearingIncrements.[int nextBearing]
             let nextHead = Coordinate.make (head.Y + yIncrement, head.X + xIncrement)
             let nextHeadIndex = (worm.HeadIndex + 1) % worm.Body.Length
@@ -195,13 +197,6 @@ module Worm =
                     Body = nextBody }
         }
         
-        
-let field = ""
-let length = 16
-let number = 3
-let trail = ChType.ofChar ' '
-let rand = System.Random()
-
 let cleanup () =
     ncurses {
         do! standend ()
@@ -209,35 +204,6 @@ let cleanup () =
         do! curs_set 1s
         return! endwin ()
     }
-
-open Nessos.UnionArgParser
-
-type Arguments =
-    | Field
-    | Length of int
-    | Number of int
-    | Trail
-with
-    interface IArgParserTemplate with
-        member this.Usage =
-            match this with
-            | Field _ -> "field."
-            | Length _ -> "specify the worm length."
-            | Number _ -> "specify the number of worms."
-            | Trail _ -> "trail."
-
-
-let parser = UnionArgParser.Create<Arguments>()
-
-let usage = parser.Usage()
-
-let config (args:ArgParseResults<Arguments>) = 
-    let field = if args.Contains <@ Field @> then "WORM" else ""
-    let wormLength = args.GetResult <@ Length @>
-    let wormCount = args.GetResult <@ Number @>
-    let trailCharacter = if args.Contains <@ Trail @> then ' ' else '.'
-    let wormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |]        
-    Configuration.make(field, wormLength, wormCount, trailCharacter, wormCharacters)
 
 let SET_COLOR (num, fg, bg) =
    ncurses {
@@ -303,42 +269,51 @@ let incrementRefCount (refCounts: CInt[,]) coordinate =
     let refCount = refCounts.[int coordinate.Y, int coordinate.X] + 1s
     refCounts.[int coordinate.Y, int coordinate.X] <- refCount
 
-let updateWorm config boundary (refCounts: CInt[,]) (worm: Worm) =
+let wiggleWorm config random boundary (refCounts: CInt[,]) worm =
     ncurses {
-        let! worm' = Worm.wiggle rand boundary worm
+        let! wiggledWorm = Worm.wiggle random boundary worm
         let tail = Worm.tail worm
-        let head = Worm.head worm'
+        let head = Worm.head wiggledWorm
 
         if Boundary.contains boundary tail then
             let tailRefCount = decrementRefCount refCounts tail
             if tailRefCount = 0s then
                 do! display tail config.TrailCharacter
         
-        
         if Boundary.contains boundary head then
-            do! display head worm.Character
+            do! display head wiggledWorm.Character
             incrementRefCount refCounts head
 
-        return worm'
+        return wiggledWorm
     }
 
-let rec loop config boundary refCounts (worms: Worm array) =
+let rec loop config random boundary refCounts worms =
     ncurses {
         let! quit = checkUserInput ()
 
         if quit then
             return 0
         else
-            let! worms' = NcursesArray.map (updateWorm config boundary refCounts) worms
+            let! wiggledWorms = NcursesArray.map (wiggleWorm config random boundary refCounts) worms
             do! napms 12s
             do! refresh ()
-            return! loop config boundary refCounts worms'
+            return! loop config random boundary refCounts wiggledWorms
     }    
 
-let run (config: Configuration) =
+let displayField boundary (field: string) =
+    ncurses {
+        let n = ref 0
+        for y in boundary.Top .. boundary.Bottom do
+            for x in boundary.Left .. boundary.Right do
+                do! move y x
+                do! addch field.[!n % field.Length]
+                incr n
+    }
+
+let run config =
     ncurses {
         let! win = initscr ()
-        //srand(seed);     
+        let random = System.Random()     
         do! noecho ()
         do! cbreak () 
         do! nonl () 
@@ -347,31 +322,51 @@ let run (config: Configuration) =
         let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
         do! initColors()
         let refCounts = Array2D.zeroCreate<CInt> (int (LINES ())) (int (COLS ()))
-
-//#ifdef BADCORNER
-//    /* if addressing the lower right corner doesn't work in your curses */
-//
-//    ref[bottom][last] = 1;
-//#endif
-
         let worms =
             [| for i in 1 .. config.WormCount do
                    let ch = config.WormCharacters.[i % config.WormCharacters.Length]
                    yield Worm.empty config.WormLength ch |]
         
-        // TODO: use field string as a repeated background???
+        if not <| System.String.IsNullOrWhiteSpace(config.Field) then
+            do! displayField boundary config.Field
+
         do! napms 12s
         do! refresh ()
-        // NOTE: in nodelay mode if no input is waiting then getch returns err
         do! nodelay win true  
-        let! result = loop config boundary refCounts worms     
+        let! result = loop config random boundary refCounts worms     
         return! cleanup ()
     }
+
+
+open Nessos.UnionArgParser
+
+type Arguments =
+  | Field
+  | Length of int
+  | Number of int
+  | Trail
+with
+  interface IArgParserTemplate with
+    member this.Usage =
+      match this with
+      | Field _ -> "specify the background field."
+      | Length _ -> "specify the worm length."
+      | Number _ -> "specify the number of worms."
+      | Trail _ -> "display worm trails."
+
+let parser = UnionArgParser.Create<Arguments>()
+let usage = parser.Usage()
+
+let config (args:ArgParseResults<Arguments>) = 
+  let field = if args.Contains <@ Field @> then "WORM" else ""
+  let wormLength = args.GetResult <@ Length @>
+  let wormCount = args.GetResult <@ Number @>
+  let trailCharacter = if args.Contains <@ Trail @> then ' ' else '.'
+  let wormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |]        
+  Configuration.make(field, wormLength, wormCount, trailCharacter, wormCharacters)
 
 [<EntryPoint>]
 let main argv =
     let config = parser.Parse argv |> config
     run config |> ignore     
-    0 // return an integer exit code
-
-
+    0 // TODO: handle computation result
