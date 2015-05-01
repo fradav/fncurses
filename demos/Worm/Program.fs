@@ -227,7 +227,7 @@ with
             | Field _ -> "specify the background field."
             | Length _ -> "specify the worm length."
             | Number _ -> "specify the number of worms."
-            | Trail _ -> "display worm trails."
+            | Trail -> "display worm trails."
 
 type Environment = 
     { Random: System.Random
@@ -260,7 +260,7 @@ let environment argv =
               Field = if args.Contains <@ Field @> then "WORM" else ""
               WormLength = args.GetResult <@ Length @>
               WormCount = args.GetResult <@ Number @>
-              TrailCharacter = if args.Contains <@ Trail @> then ' ' else '.'
+              TrailCharacter = if args.Contains <@ Trail @> then '.' else ' '
               WormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] }
     }
 
