@@ -2,10 +2,12 @@
 
 module Example =
 
+    open ExtCore.Control.Collections
+
     let helloworld () =
         ncurses {
             do! "Greetings from fncurses!".ToCharArray() 
-                |> NcursesArray.iter (fun ch ->
+                |> Choice.Array.iter (fun ch ->
                     ncurses {
                         do! addch ch
                         do! refresh ()
@@ -28,10 +30,10 @@ module Example =
         ncurses {
             let text = [|"Do"; "you"; "find"; "this"; "silly?"|]
             do! [|0 .. 4|]
-                |> NcursesArray.iter (fun a ->
+                |> Choice.Array.iter (fun a ->
                     ncurses {
                         do! [|0 .. 4|]
-                            |> NcursesArray.iter (fun b ->
+                            |> Choice.Array.iter (fun b ->
                                 ncurses {
                                     if b = a then do! attrset (Attribute.A_BOLD ||| Attribute.A_UNDERLINE)
                                     do! printw "%s" text.[b]
@@ -57,7 +59,7 @@ module Example =
                     "A_ALTCHARSET",Attribute.A_ALTCHARSET
                     "A_INVIS",Attribute.A_INVIS
                     "A_PROTECT",Attribute.A_PROTECT
-                |] |> NcursesArray.iter (fun (text,attribute) ->
+                |] |> Choice.Array.iter (fun (text,attribute) ->
                     ncurses {
                         do! attrset attribute
                         do! printw "%s" text
@@ -97,4 +99,4 @@ let run f =
 let main argv =
     match run Example.attributes with
     | Success _ -> 0
-    | Failure reason -> printfn "%s" reason; 1
+    | Error reason -> printfn "%s" reason; 1

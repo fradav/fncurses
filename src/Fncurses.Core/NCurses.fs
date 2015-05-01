@@ -3,8 +3,11 @@ namespace Fncurses.Core
 [<AutoOpen>]
 module NCurses = 
 
+    open ExtCore.Control
     open System
 
+    let ncurses = ChoiceBuilder()
+        
     // ----------------------------------------------------------------------
     // Helpers
 
@@ -81,10 +84,10 @@ module NCurses =
     // bkgd
 
     let bkgd ch = Imported.bkgd (toChType ch) |> Check.unitResult "bkgd"
-    let bkgdset ch = Imported.bkgdset (toChType ch) |> Result.result
-    let getbkgd win = Imported.getbkgd win |> Result.result
+    let bkgdset ch = Imported.bkgdset (toChType ch) |> Choice.result
+    let getbkgd win = Imported.getbkgd win |> Choice.result
     let wbkgd win ch = Imported.wbkgd win (toChType ch) |> Check.unitResult "wbkgd"
-    let wbkgdset win ch = Imported.wbkgdset win (toChType ch) |> Result.result
+    let wbkgdset win ch = Imported.wbkgdset win (toChType ch) |> Choice.result
 
     // border
 
@@ -117,7 +120,7 @@ module NCurses =
     let init_pair pair fg bg = Imported.init_pair pair fg bg |> Check.unitResult "init_pair"
     let init_color color red green blue = Imported.init_color color red green blue |> Check.unitResult "init_color"
     let has_colors () = Imported.has_colors ()
-    let can_change_color () = Imported.can_change_color () |> Result.result
+    let can_change_color () = Imported.can_change_color () |> Choice.result
     let color_content color = Imported.color_content color |> Check.optionResult "color_content"
     let pair_content pair = Imported.pair_content pair |> Check.optionResult "pair_content"
 
@@ -162,17 +165,17 @@ module NCurses =
 
     // getyx
         
-    let getyx win = Imported.getyx win |> Result.result
-    let getparyx win = Imported.getparyx win |> Result.result
-    let getbegyx win = Imported.getbegyx win |> Result.result
-    let getmaxyx win = Imported.getmaxyx win |> Result.result
+    let getyx win = Imported.getyx win |> Choice.result
+    let getparyx win = Imported.getparyx win |> Choice.result
+    let getbegyx win = Imported.getbegyx win |> Choice.result
+    let getmaxyx win = Imported.getmaxyx win |> Choice.result
 
     // inch
 
-    let inch () = Imported.inch () |> Result.result
-    let winch win = Imported.winch win |> Result.result
-    let mvinch y x = Imported.mvinch y x |> Result.result
-    let mvwinch win y x = Imported.mvwinch win y x |> Result.result
+    let inch () = Imported.inch () |> Choice.result
+    let winch win = Imported.winch win |> Choice.result
+    let mvinch y x = Imported.mvinch y x |> Choice.result
+    let mvwinch win y x = Imported.mvwinch win y x |> Choice.result
 
     // inchstr
 
@@ -192,7 +195,7 @@ module NCurses =
     let isendwin () = Imported.isendwin ()
     let newterm ``type`` outfd infd = Imported.newterm ``type`` outfd infd |> Check.cptrResult "set_term"
     let set_term ``new`` = Imported.set_term ``new`` |> Check.cptrResult "set_term"
-    let delscreen sp = Imported.delscreen sp |> Result.result
+    let delscreen sp = Imported.delscreen sp |> Choice.result
 
     // inopts
 
@@ -210,10 +213,10 @@ module NCurses =
     let notimeout win bf = Imported.notimeout win bf |> Check.unitResult "notimeout"
     let raw () = Imported.raw () |> Check.unitResult "raw"
     let noraw () = Imported.noraw () |> Check.unitResult "noraw"
-    let noqiflush () = Imported.noqiflush () |> Result.result
-    let qiflush () = Imported.qiflush () |> Result.result
-    let timeout delay = Imported.timeout delay |> Result.result
-    let wtimeout win delay = Imported.wtimeout win delay |> Result.result
+    let noqiflush () = Imported.noqiflush () |> Choice.result
+    let qiflush () = Imported.qiflush () |> Choice.result
+    let timeout delay = Imported.timeout delay |> Choice.result
+    let wtimeout win delay = Imported.wtimeout win delay |> Choice.result
     let typeahead fildes = Imported.typeahead fildes |> Check.unitResult "typeahead"
      
     // kernel
@@ -231,7 +234,7 @@ module NCurses =
     let napms ms = Imported.napms ms |> Check.unitResult "napms"
 
     let refresh () = Imported.refresh() |> Check.unitResult "refresh"
-    //let getmaxyx win = Imported.getmaxyx win |> Result.result
+    //let getmaxyx win = Imported.getmaxyx win |> Choice.result
     //let getstr () = Imported.getstr() |> Check.optionResult "getstr"
     //let wgetnstr win n = Imported.wgetnstr win n |> Check.optionResult "wgetnstr"
     //let wgetstr win = Imported.wgetstr win |> Check.optionResult "wgetstr"
