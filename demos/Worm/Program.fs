@@ -88,7 +88,7 @@ module DomainTypes =
           HeadIndex : int
           Body : Coordinate array }        
 
-    type ReferenceCounters = CInt[,]
+    type ReferenceCounters = int[,]
         
 
 module Boundary =
@@ -171,7 +171,7 @@ module Worm =
                        match possibleNextBearings.Length with
                        | 0 -> Choice.failwithf "there are no possible next bearings for position %A and bearing %A" position bearing
                        | 1 -> Choice.result possibleNextBearings.[0]
-                       | n -> Choice.result possibleNextBearings.[random.Next(0, n - 1)]
+                       | n -> Choice.result possibleNextBearings.[random.Next(0, n)]
                  | coordinate -> Choice.failwithf "the coordinate %A is out-of-bounds" coordinate        
 
     let wiggle random boundary worm =
@@ -183,11 +183,7 @@ module Worm =
             let nextHeadIndex = (worm.HeadIndex + 1) % worm.Body.Length
             let nextBody = Array.copy worm.Body
             nextBody.[nextHeadIndex] <- nextHead
-            return
-                { worm with
-                    Bearing = nextBearing
-                    HeadIndex = nextHeadIndex
-                    Body = nextBody }
+            return { worm with Bearing = nextBearing; HeadIndex = nextHeadIndex; Body = nextBody }
         }
 
 
@@ -196,15 +192,20 @@ module ReferenceCounters =
     open Fncurses.Core
         
     let empty (lines, cols) =
-        Array2D.zeroCreate<CInt> (int lines) (int cols)
-
-    let decrement (refCounts: CInt[,]) coordinate =
-        let refCount = refCounts.[int coordinate.Y, int coordinate.X] - 1s
+        let refCounts = Array2D.zeroCreate<int> (int lines) (int cols)
+        // In some curses addch returns ERR when addressing the
+        // BottomRight corner. Prime the BottomRight reference count
+        // to workaround this.
+        refCounts.[int lines - 1, int cols - 1] <- 1
+        refCounts
+        
+    let decrement (refCounts: ReferenceCounters) coordinate =
+        let refCount = refCounts.[int coordinate.Y, int coordinate.X] - 1
         refCounts.[int coordinate.Y, int coordinate.X] <- refCount
         refCount
     
-    let increment (refCounts: CInt[,]) coordinate =
-        let refCount = refCounts.[int coordinate.Y, int coordinate.X] + 1s
+    let increment (refCounts: ReferenceCounters) coordinate =
+        let refCount = refCounts.[int coordinate.Y, int coordinate.X] + 1
         refCounts.[int coordinate.Y, int coordinate.X] <- refCount
 
 open ExtCore
@@ -322,24 +323,25 @@ let checkUserInput () =
         | _ -> return false      // No user input, so continue.             
     }
 
-let displayCharacter coordinate ch =
+let displayCharacter boundary coordinate ch =
     ncurses {
         do! move coordinate.Y coordinate.X
-        do! addch ch
+        if not (coordinate.Y = boundary.Bottom && coordinate.X = boundary.Right) then
+            do! addch ch
     }
 
-let wiggleWorm config random boundary (refCounts: CInt[,]) worm =
+let wiggleWorm config random boundary refCounts worm =
     ncurses {
         let! wiggledWorm = Worm.wiggle random boundary worm
         let head = Worm.head wiggledWorm
         let tail = Worm.tail worm
 
-        if Boundary.contains boundary tail && ReferenceCounters.decrement refCounts tail = 0s then
-            do! displayCharacter tail config.TrailCharacter
+        if Boundary.contains boundary tail && ReferenceCounters.decrement refCounts tail = 0 then
+            do! displayCharacter boundary tail config.TrailCharacter
         
         if Boundary.contains boundary head then
             ReferenceCounters.increment refCounts head
-            do! displayCharacter head wiggledWorm.Character
+            do! displayCharacter boundary head wiggledWorm.Character
 
         return wiggledWorm
     }
@@ -362,6 +364,7 @@ let run config =
         let! win = initscr ()
         let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
         let refCounts = ReferenceCounters.empty (LINES (), COLS ())
+        refCounts.[int boundary.Bottom, int boundary.Left] <- config.WormCount
         let worms = Worm.makeN (boundary, config.WormCharacters, config.WormLength, config.WormCount)
         do! noecho ()
         do! cbreak () 

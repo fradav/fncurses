@@ -218,7 +218,14 @@ module NCurses =
     let timeout delay = Imported.timeout delay |> Choice.result
     let wtimeout win delay = Imported.wtimeout win delay |> Choice.result
     let typeahead fildes = Imported.typeahead fildes |> Check.unitResult "typeahead"
+    
+    // insch
      
+    let insch ch = Imported.insch (toChType ch) |> Check.unitResult "insch"
+    let winsch win ch = Imported.winsch win (toChType ch) |> Check.unitResult "winsch"
+    let mvinsch y x ch = Imported.mvinsch y x (toChType ch) |> Check.unitResult "mvinsch"
+    let mvwinsch win y x ch = Imported.mvwinsch win y x (toChType ch) |> Check.unitResult "mvwinsch"
+
     // kernel
                     
     let def_prog_mode () = Imported.def_prog_mode () |> Check.unitResult "def_prog_mode"
