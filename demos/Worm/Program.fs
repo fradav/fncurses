@@ -93,15 +93,15 @@ module DomainTypes =
 
 module Boundary =
 
-  let make (top, right, bottom, left) =
-      { Top = top
-        Right = right
-        Bottom = bottom
-        Left = left }    
-
-  let contains boundary coordinate =
-      coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
-      coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
+    let make (top, right, bottom, left) =
+        { Top = top
+          Right = right
+          Bottom = bottom
+          Left = left }    
+  
+    let contains boundary coordinate =
+        coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
+        coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
 
 
 module Coordinate =
