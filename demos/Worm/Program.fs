@@ -127,7 +127,6 @@ module Coordinate =
             |> Some
         else
             None
-        
 
 module Worm =
 
@@ -148,16 +147,18 @@ module Worm =
     //                           NE     E      SE     S       SW       W        NW       N    
     let bearingIncrements =  [| -1s,1s; 0s,1s; 1s,1s; 1s,0s;  1s,-1s;  0s,-1s; -1s,-1s; -1s,0s |]
            
-    let empty length ch =
+    let empty (length, ch, head, bearing) =
+        let body = Array.create length Coordinate.empty
+        body.[0] <- head
         { Character = ch
-          Bearing = Bearing.N
+          Bearing = bearing
           HeadIndex = 0
-          Body = Array.create length Coordinate.empty }
+          Body = body }
 
-    let makeN (characters: char array, length, n) =
-        [| for i in 1 .. n do
-               yield empty length characters.[i % characters.Length] |]
-        
+    let makeN (boundary, characters: char array, length, n) =
+        let head = Coordinate.make (boundary.Bottom, boundary.Left)
+        [| for i in 1 .. n do yield empty (length, characters.[i % characters.Length], head, Bearing.SW) |]
+
     let head worm =
         worm.Body.[worm.HeadIndex]
 
@@ -168,7 +169,7 @@ module Worm =
         function | Coordinate.Position boundary position ->
                        let possibleNextBearings = bearingOptions.[int position, int bearing]
                        match possibleNextBearings.Length with
-                       | 0 -> Choice.failwithf "no possible next bearing for position %A and bearing %A" position bearing
+                       | 0 -> Choice.failwithf "there are no possible next bearings for position %A and bearing %A" position bearing
                        | 1 -> Choice.result possibleNextBearings.[0]
                        | n -> Choice.result possibleNextBearings.[random.Next(0, n - 1)]
                  | coordinate -> Choice.failwithf "the coordinate %A is out-of-bounds" coordinate        
@@ -361,7 +362,7 @@ let run config =
         let! win = initscr ()
         let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
         let refCounts = ReferenceCounters.empty (LINES (), COLS ())
-        let worms = Worm.makeN (config.WormCharacters, config.WormLength, config.WormCount)
+        let worms = Worm.makeN (boundary, config.WormCharacters, config.WormLength, config.WormCount)
         do! noecho ()
         do! cbreak () 
         do! nonl () 
