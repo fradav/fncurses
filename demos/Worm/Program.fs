@@ -216,10 +216,10 @@ open Nessos.UnionArgParser
 open System
 
 type Arguments =
-    | Field
-    | Length of int
-    | Number of int
-    | Trail
+    | [<AltCommandLine("-f")>] Field
+    | [<AltCommandLine("-l")>] Length of int
+    | [<AltCommandLine("-n")>] Number of int
+    | [<AltCommandLine("-t")>] Trail
 with
     interface IArgParserTemplate with
         member this.Usage =
@@ -252,7 +252,7 @@ let environment argv =
         let parser = UnionArgParser.Create<Arguments>()        
         let! args =
             try parser.Parse argv |> Choice.result
-            with ex -> parser.Usage() |> Choice.failwithf "error: %s\n%s" ex.Message         
+            with ex -> Choice.failwith ex.Message         
         let! wormCount = args.PostProcessResult(<@ Number @>, checkWormCount)
         let! wormLength = args.PostProcessResult(<@ Length @>, checkWormLength)
         return
