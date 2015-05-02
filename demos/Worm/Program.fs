@@ -62,26 +62,11 @@ module DomainTypes =
                 
     open Fncurses.Core
 
-    type Boundary =
-        { Top : CInt
-          Right : CInt
-          Bottom : CInt
-          Left : CInt }
-    
-    type Coordinate =
-        { Y : CInt
-          X : CInt }
-     
     type Bearing =
         | NW = 6 | N = 7 | NE = 0
         |  W = 5         |  E = 1
         | SW = 4 | S = 3 | SE = 2
-    
-    type Position =
-        |    TopLeft = 0 |    Top = 1 |    TopRight = 2
-        |       Left = 3 | Normal = 4 |       Right = 5
-        | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
-    
+        
     type Worm =
         { Character : char
           Bearing : Bearing
@@ -91,47 +76,11 @@ module DomainTypes =
     type ReferenceCounters = int[,]
         
 
-module Boundary =
-
-    let make (top, right, bottom, left) =
-        { Top = top
-          Right = right
-          Bottom = bottom
-          Left = left }    
-  
-    let contains boundary coordinate =
-        coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
-        coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
-
-
-module Coordinate =
-
-    let make (y, x) =
-        { Y = y
-          X = x }
-        
-    let empty = make (-1s, -1s)
-
-    let (|Position|_|) boundary coordinate =
-        if Boundary.contains boundary coordinate then
-            match coordinate.Y, coordinate.X with
-            | 0s, 0s                                                -> Position.TopLeft
-            |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
-            |  _, 0s                                                -> Position.Left
-            | 0s,  x when x = boundary.Right                        -> Position.TopRight
-            |  y,  x when x = boundary.Right && y = boundary.Bottom -> Position.BottomRight
-            |  _,  x when x = boundary.Right                        -> Position.Right
-            | 0s,  _                                                -> Position.Top
-            |  y,  _ when y = boundary.Bottom                       -> Position.Bottom
-            |  _,  _                                                -> Position.Normal
-            |> Some
-        else
-            None
-
 module Worm =
 
     open ExtCore.Control
-        
+    open Fncurses.Core
+                
     let bearingOptions =
         array2D    
             [| [| [||]; [||]; [||]; [||]; [||]; [|Bearing.S|]; [|Bearing.E; Bearing.S|]; [|Bearing.E|] |]
@@ -356,7 +305,7 @@ let rec loop config random boundary refCounts worms =
         let! userQuit = checkUserInput ()
 
         if userQuit then
-            return 0
+            return! cleanup ()        
         else
             let! wiggledWorms = Choice.Array.map (wiggleWorm config random boundary refCounts) worms
             do! napms 12s
@@ -381,8 +330,7 @@ let run config =
         do! napms 12s
         do! refresh ()
         do! nodelay win true  
-        let! result = loop config (Random()) boundary refCounts worms     
-        return! cleanup ()        
+        return! loop config (Random()) boundary refCounts worms     
     }
 
 [<EntryPoint>]
@@ -392,6 +340,7 @@ let main argv =
             let! env = environment argv
             return! run env
         }
+        
     match result with
     | Success _ -> 0
     | Error reason -> printfn "%s" reason; -1

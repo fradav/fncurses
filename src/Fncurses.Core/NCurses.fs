@@ -1,6 +1,62 @@
 namespace Fncurses.Core
 
 [<AutoOpen>]
+module DomainTypes =
+
+    type Boundary =
+        { Top : CInt
+          Right : CInt
+          Bottom : CInt
+          Left : CInt }
+
+    type Coordinate =
+        { Y : CInt
+          X : CInt }
+
+    type Position =
+        |    TopLeft = 0 |    Top = 1 |    TopRight = 2
+        |       Left = 3 | Normal = 4 |       Right = 5
+        | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
+
+
+module Boundary =
+
+    let make (top, right, bottom, left) =
+        { Top = top
+          Right = right
+          Bottom = bottom
+          Left = left }    
+  
+    let contains boundary coordinate =
+        coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
+        coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
+
+
+module Coordinate =
+
+    let make (y, x) =
+        { Y = y
+          X = x }
+        
+    let empty = make (-1s, -1s)
+
+    let (|Position|_|) boundary coordinate =
+        if Boundary.contains boundary coordinate then
+            match coordinate.Y, coordinate.X with
+            | 0s, 0s                                                -> Position.TopLeft
+            |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
+            |  _, 0s                                                -> Position.Left
+            | 0s,  x when x = boundary.Right                        -> Position.TopRight
+            |  y,  x when x = boundary.Right && y = boundary.Bottom -> Position.BottomRight
+            |  _,  x when x = boundary.Right                        -> Position.Right
+            | 0s,  _                                                -> Position.Top
+            |  y,  _ when y = boundary.Bottom                       -> Position.Bottom
+            |  _,  _                                                -> Position.Normal
+            |> Some
+        else
+            None
+       
+[<AutoOpen>]
 module NCurses = 
 
     open ExtCore.Control
