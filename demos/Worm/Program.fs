@@ -312,6 +312,11 @@ let checkUserInput () =
         | _ -> return false      // No user input, so continue.             
     }
 
+// TODO: resize screen
+// TODO: color
+// TODO: ubuntu
+// TODO: chtype not char for addch etc
+
 let displayCharacter boundary coordinate ch =
     ncurses {
         do! move coordinate.Y coordinate.X
