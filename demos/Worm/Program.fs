@@ -263,17 +263,6 @@ let environment argv =
               TrailCharacter = if args.Contains <@ Trail @> then '.' else ' '
               WormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] }
     }
-
-let displayField boundary (field: string) =
-    ncurses {
-        if not (String.isNullOrEmpty field) then
-            let n = ref 0
-            for y in boundary.Top .. boundary.Bottom do
-                for x in boundary.Left .. boundary.Right do
-                    do! move y x
-                    do! addch field.[!n % field.Length]
-                    incr n
-    }
                 
 let cleanup () =
     ncurses {
@@ -329,6 +318,17 @@ let displayCharacter boundary coordinate ch =
         if not (coordinate.Y = boundary.Bottom && coordinate.X = boundary.Right) then
             do! addch ch
     }
+
+let displayField boundary (field: string) =
+    if not (String.isNullOrEmpty field) then
+        [| let n = ref 0
+           for y in boundary.Top .. boundary.Bottom do
+               for x in boundary.Left .. boundary.Right do
+                   yield Coordinate.make(y,x),field.[!n % field.Length]
+                   incr n
+        |] |> Choice.Array.iter (fun (coordinate,ch) -> displayCharacter boundary coordinate ch)
+    else
+        Choice.result ()
 
 let wiggleWorm config random boundary refCounts worm =
     ncurses {
@@ -389,4 +389,4 @@ let main argv =
         }
     match result with
     | Success _ -> 0
-    | Error reason -> printfn "error: %s" reason; -1
+    | Error reason -> printfn "%s" reason; -1
