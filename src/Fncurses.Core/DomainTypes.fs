@@ -1,7 +1,7 @@
 namespace Fncurses.Core
 
 [<AutoOpen>]
-module Types =
+module DomainTypes =
 
     open System
     open System.Runtime.InteropServices
