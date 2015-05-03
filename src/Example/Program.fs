@@ -9,7 +9,7 @@ module Example =
             do! "Greetings from fncurses!".ToCharArray() 
                 |> Choice.Array.iter (fun ch ->
                     ncurses {
-                        do! addch ch
+                        do! addch (ChType.ofChar ch)
                         do! refresh ()
                         do! napms 100s
                     })
@@ -38,7 +38,7 @@ module Example =
                                     if b = a then do! attrset (Attribute.A_BOLD ||| Attribute.A_UNDERLINE)
                                     do! printw "%s" text.[b]
                                     if b = a then do! attroff (Attribute.A_BOLD ||| Attribute.A_UNDERLINE)
-                                    do! addch ' '
+                                    do! addch (ChType.ofChar ' ')
                                 })
                         do! addstr "\b\n"
                     })
@@ -64,7 +64,7 @@ module Example =
                         do! attrset attribute
                         do! printw "%s" text
                         do! attroff attribute
-                        do! addch '\n'
+                        do! addch (ChType.ofChar '\n')
                     })
             }
 

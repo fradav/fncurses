@@ -9,7 +9,7 @@ module Types =
     // ----------------------------------------------------------------------
     // C Data Types
         
-    type ChType = System.UInt32 // TODO: pdcurses is ok with 32 bit chtype, but mac and nix?
+    type ChType = System.UInt32
     type ChTypeBuf = ChType array
     type Args = obj array
     type Attr_t = ChType
@@ -242,6 +242,64 @@ module Types =
     [<UnmanagedFunctionPointer(CallingConvention.Cdecl)>]
     type WinPtr_WinPtr_CInt_CInt_CInt_CInt_CInt_CInt_CInt_CInt = delegate of WinPtr * WinPtr * CInt * CInt * CInt * CInt * CInt * CInt * CInt -> CInt
 
+    // ----------------------------------------------------------------------
+    // Screen Coordinate Types
+
+    type Boundary =
+        { Top : CInt
+          Right : CInt
+          Bottom : CInt
+          Left : CInt }
+
+    type Coordinate =
+        { Y : CInt
+          X : CInt }
+
+    type Position =
+        |    TopLeft = 0 |    Top = 1 |    TopRight = 2
+        |       Left = 3 | Normal = 4 |       Right = 5
+        | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
+
+
+[<RequireQualifiedAccess>]
+module Boundary =
+
+    let make (top, right, bottom, left) =
+        { Top = top
+          Right = right
+          Bottom = bottom
+          Left = left }    
+  
+    let contains boundary coordinate =
+        coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
+        coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
+
+
+[<RequireQualifiedAccess>]
+module Coordinate =
+
+    let make (y, x) =
+        { Y = y
+          X = x }
+        
+    let empty = make (-1s, -1s)
+
+    let (|Position|_|) boundary coordinate =
+        if Boundary.contains boundary coordinate then
+            match coordinate.Y, coordinate.X with
+            | 0s, 0s                                                -> Position.TopLeft
+            |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
+            |  _, 0s                                                -> Position.Left
+            | 0s,  x when x = boundary.Right                        -> Position.TopRight
+            |  y,  x when x = boundary.Right && y = boundary.Bottom -> Position.BottomRight
+            |  _,  x when x = boundary.Right                        -> Position.Right
+            | 0s,  _                                                -> Position.Top
+            |  y,  _ when y = boundary.Bottom                       -> Position.Bottom
+            |  _,  _                                                -> Position.Normal
+            |> Some
+        else
+            None
+
 [<RequireQualifiedAccess>]
 module ChType =
 
@@ -252,6 +310,15 @@ module ChType =
     let ofCInt (ch: CInt) : ChType = uint32 ch
     let zero = ofInt 0
     let one = ofInt 1
+
+
+[<RequireQualifiedAccess>]
+module CChar_t =
+
+    open System
+        
+    let toCChar_t (ch: char) : CChar_t = Convert.ToUInt32 ch
+
 
 [<RequireQualifiedAccess>]
 module CInt =

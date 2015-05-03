@@ -1,60 +1,4 @@
 namespace Fncurses.Core
-
-[<AutoOpen>]
-module DomainTypes =
-
-    type Boundary =
-        { Top : CInt
-          Right : CInt
-          Bottom : CInt
-          Left : CInt }
-
-    type Coordinate =
-        { Y : CInt
-          X : CInt }
-
-    type Position =
-        |    TopLeft = 0 |    Top = 1 |    TopRight = 2
-        |       Left = 3 | Normal = 4 |       Right = 5
-        | BottomLeft = 6 | Bottom = 7 | BottomRight = 8
-
-
-module Boundary =
-
-    let make (top, right, bottom, left) =
-        { Top = top
-          Right = right
-          Bottom = bottom
-          Left = left }    
-  
-    let contains boundary coordinate =
-        coordinate.Y >= boundary.Top && coordinate.Y <= boundary.Bottom &&
-        coordinate.X >= boundary.Left && coordinate.X <= boundary.Right
-
-
-module Coordinate =
-
-    let make (y, x) =
-        { Y = y
-          X = x }
-        
-    let empty = make (-1s, -1s)
-
-    let (|Position|_|) boundary coordinate =
-        if Boundary.contains boundary coordinate then
-            match coordinate.Y, coordinate.X with
-            | 0s, 0s                                                -> Position.TopLeft
-            |  y, 0s when y = boundary.Bottom                       -> Position.BottomLeft
-            |  _, 0s                                                -> Position.Left
-            | 0s,  x when x = boundary.Right                        -> Position.TopRight
-            |  y,  x when x = boundary.Right && y = boundary.Bottom -> Position.BottomRight
-            |  _,  x when x = boundary.Right                        -> Position.Right
-            | 0s,  _                                                -> Position.Top
-            |  y,  _ when y = boundary.Bottom                       -> Position.Bottom
-            |  _,  _                                                -> Position.Normal
-            |> Some
-        else
-            None
        
 [<AutoOpen>]
 module NCurses = 
@@ -64,12 +8,6 @@ module NCurses =
 
     let ncurses = ChoiceBuilder()
         
-    // ----------------------------------------------------------------------
-    // Helpers
-
-    let toChType (ch:char) = Convert.ToUInt32 ch
-    let toCChar_t (ch:char) = Convert.ToUInt32 ch
-
     // ----------------------------------------------------------------------
     // Variable getters
 
@@ -90,12 +28,12 @@ module NCurses =
 
     // addch
         
-    let addch ch = Imported.addch (toChType ch) |> Check.unitResult "addch"
-    let waddch win ch = Imported.waddch win (toChType ch) |> Check.unitResult "waddch"
-    let mvaddch y x ch = Imported.mvaddch y x (toChType ch) |> Check.unitResult "mvaddch"
-    let mvwaddch win y x ch = Imported.mvwaddch win y x (toChType ch) |> Check.unitResult "mvwaddch"
-    let echochar ch = Imported.echochar (toChType ch) |> Check.unitResult "echochar"
-    let wechochar win ch = Imported.wechochar win (toChType ch) |> Check.unitResult "wechochar"
+    let addch ch = Imported.addch ch |> Check.unitResult "addch"
+    let waddch win ch = Imported.waddch win ch |> Check.unitResult "waddch"
+    let mvaddch y x ch = Imported.mvaddch y x ch |> Check.unitResult "mvaddch"
+    let mvwaddch win y x ch = Imported.mvwaddch win y x ch |> Check.unitResult "mvwaddch"
+    let echochar ch = Imported.echochar ch |> Check.unitResult "echochar"
+    let wechochar win ch = Imported.wechochar win ch |> Check.unitResult "wechochar"
 
     // addchstr
 
@@ -139,25 +77,25 @@ module NCurses =
 
     // bkgd
 
-    let bkgd ch = Imported.bkgd (toChType ch) |> Check.unitResult "bkgd"
-    let bkgdset ch = Imported.bkgdset (toChType ch) |> Choice.result
+    let bkgd ch = Imported.bkgd ch |> Check.unitResult "bkgd"
+    let bkgdset ch = Imported.bkgdset ch |> Choice.result
     let getbkgd win = Imported.getbkgd win |> Choice.result
-    let wbkgd win ch = Imported.wbkgd win (toChType ch) |> Check.unitResult "wbkgd"
-    let wbkgdset win ch = Imported.wbkgdset win (toChType ch) |> Choice.result
+    let wbkgd win ch = Imported.wbkgd win ch |> Check.unitResult "wbkgd"
+    let wbkgdset win ch = Imported.wbkgdset win ch |> Choice.result
 
     // border
 
-    let border ls rs ts bs tl tr bl br = Imported.border (toChType ls) (toChType rs) (toChType ts) (toChType bs) (toChType tl) (toChType tr) (toChType bl) (toChType br) |> Check.unitResult "border"
-    let wborder win ls rs ts bs tl tr bl br = Imported.wborder win (toChType ls) (toChType rs) (toChType ts) (toChType bs) (toChType tl) (toChType tr) (toChType bl) (toChType br) |> Check.unitResult "wborder"
-    let box win verch horch = Imported.box win (toChType verch) (toChType horch) |> Check.unitResult "box"
-    let hline ch n = Imported.hline (toChType ch) n |> Check.unitResult "hline"
-    let vline ch n = Imported.vline (toChType ch) n |> Check.unitResult "vline"
-    let whline win ch n = Imported.whline win (toChType ch) n |> Check.unitResult "whline"
-    let wvline win ch n = Imported.wvline win (toChType ch) n |> Check.unitResult "wvline"
-    let mvhline y x ch n = Imported.mvhline y x (toChType ch) n |> Check.unitResult "mvhline"
-    let mvvline y x ch n = Imported.mvvline y x (toChType ch) n |> Check.unitResult "mvvline"
-    let mvwhline win y x ch n = Imported.mvwhline win y x (toChType ch) n |> Check.unitResult "mvwhline"
-    let mvwvline win y x ch n = Imported.mvwvline win y x (toChType ch) n |> Check.unitResult "mvwvline"
+    let border ls rs ts bs tl tr bl br = Imported.border ls rs ts bs tl tr bl br |> Check.unitResult "border"
+    let wborder win ls rs ts bs tl tr bl br = Imported.wborder win ls rs ts bs tl tr bl br |> Check.unitResult "wborder"
+    let box win verch horch = Imported.box win verch horch |> Check.unitResult "box"
+    let hline ch n = Imported.hline ch n |> Check.unitResult "hline"
+    let vline ch n = Imported.vline ch n |> Check.unitResult "vline"
+    let whline win ch n = Imported.whline win ch n |> Check.unitResult "whline"
+    let wvline win ch n = Imported.wvline win ch n |> Check.unitResult "wvline"
+    let mvhline y x ch n = Imported.mvhline y x ch n |> Check.unitResult "mvhline"
+    let mvvline y x ch n = Imported.mvvline y x ch n |> Check.unitResult "mvvline"
+    let mvwhline win y x ch n = Imported.mvwhline win y x ch n |> Check.unitResult "mvwhline"
+    let mvwvline win y x ch n = Imported.mvwvline win y x ch n |> Check.unitResult "mvwvline"
 
     // clear
 
@@ -277,10 +215,10 @@ module NCurses =
     
     // insch
      
-    let insch ch = Imported.insch (toChType ch) |> Check.unitResult "insch"
-    let winsch win ch = Imported.winsch win (toChType ch) |> Check.unitResult "winsch"
-    let mvinsch y x ch = Imported.mvinsch y x (toChType ch) |> Check.unitResult "mvinsch"
-    let mvwinsch win y x ch = Imported.mvwinsch win y x (toChType ch) |> Check.unitResult "mvwinsch"
+    let insch ch = Imported.insch ch |> Check.unitResult "insch"
+    let winsch win ch = Imported.winsch win ch |> Check.unitResult "winsch"
+    let mvinsch y x ch = Imported.mvinsch y x ch |> Check.unitResult "mvinsch"
+    let mvwinsch win y x ch = Imported.mvwinsch win y x ch |> Check.unitResult "mvwinsch"
 
     // kernel
                     

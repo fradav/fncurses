@@ -68,7 +68,7 @@ module DomainTypes =
         | SW = 4 | S = 3 | SE = 2
         
     type Worm =
-        { Character : char
+        { Character : ChType
           Bearing : Bearing
           HeadIndex : int
           Body : Coordinate array }        
@@ -104,7 +104,7 @@ module Worm =
           HeadIndex = 0
           Body = body }
 
-    let makeN (boundary, characters: char array, length, n) =
+    let makeN (boundary, characters: ChType array, length, n) =
         let head = Coordinate.make (boundary.Bottom, boundary.Left)
         [| for i in 1 .. n do yield empty (length, characters.[i % characters.Length], head, Bearing.SW) |]
 
@@ -183,8 +183,8 @@ type Environment =
       Field: string
       WormLength: int
       WormCount: int
-      TrailCharacter: char
-      WormCharacters: char array }
+      TrailCharacter: ChType
+      WormCharacters: ChType array }
 
 let checkWormCount number =
     if number >= 1 && number <= 40
@@ -209,8 +209,8 @@ let environment argv =
               Field = if args.Contains <@ Field @> then "WORM" else ""
               WormLength = args.GetResult <@ Length @>
               WormCount = args.GetResult <@ Number @>
-              TrailCharacter = if args.Contains <@ Trail @> then '.' else ' '
-              WormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] }
+              TrailCharacter = ChType.ofChar <| if args.Contains <@ Trail @> then '.' else ' '
+              WormCharacters = [| 'O'; '*'; '#'; '$'; '%'; '0'; '@' |] |> Array.map ChType.ofChar }
     }
                 
 let cleanup () =
@@ -274,16 +274,16 @@ let displayCharacter boundary coordinate ch =
     }
 
 let displayField boundary (field: string) =
-    if not (String.isNullOrEmpty field) then
-        [| let n = ref 0
-           for y in boundary.Top .. boundary.Bottom do
-               for x in boundary.Left .. boundary.Right do
-                   yield Coordinate.make(y,x),field.[!n % field.Length]
-                   incr n
-        |] |> Choice.Array.iter (fun (coordinate,ch) -> displayCharacter boundary coordinate ch)
-    else
-        Choice.result ()
-
+    ncurses {
+        if not (String.isNullOrEmpty field) then
+            do! 
+                [| let n = ref 0
+                   for y in boundary.Top .. boundary.Bottom do
+                       for x in boundary.Left .. boundary.Right do
+                           yield Coordinate.make(y,x), ChType.ofChar field.[!n % field.Length]; incr n |]
+                |> Choice.Array.iter (fun (coordinate,ch) -> displayCharacter boundary coordinate ch)
+    }
+        
 let wiggleWorm config random boundary refCounts worm =
     ncurses {
         let! wiggledWorm = Worm.wiggle random boundary worm
