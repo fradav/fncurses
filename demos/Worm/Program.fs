@@ -162,7 +162,7 @@ open ExtCore.Control.Collections
 open ExtCore.Control.WorkflowBuilders
 open Fncurses.Core
 open Nessos.UnionArgParser        
-open System
+//open System
 
 type Arguments =
     | [<AltCommandLine("-f")>] Field
@@ -205,7 +205,7 @@ let environment argv =
         let! wormCount = args.PostProcessResult(<@ Number @>, checkWormCount)
         let! wormLength = args.PostProcessResult(<@ Length @>, checkWormLength)
         return
-            { Random = Random()
+            { Random = System.Random()
               Field = if args.Contains <@ Field @> then "WORM" else ""
               WormLength = args.GetResult <@ Length @>
               WormCount = args.GetResult <@ Number @>
@@ -227,7 +227,7 @@ let SET_COLOR (num, fg, bg) =
 let styleWormCharacters (wormCharacters: ChType array) =
     wormCharacters
     |> Array.mapi (fun i ch ->
-        ch ||| Color.COLOR_PAIR(CInt.ofInt i + CInt.one) ||| Fncurses.Core.Attributes.Attribute.A_BOLD)
+        ch ||| Color.COLOR_PAIR(CInt.ofInt i + CInt.one) ||| Attribute.A_BOLD)
 
 let initColors () =
     ncurses {
@@ -283,9 +283,9 @@ let displayField boundary (field: string) =
                 |> Choice.Array.iter (fun (coordinate,ch) -> displayCharacter boundary coordinate ch)
     }
         
-let wiggleWorm config random boundary refCounts worm =
+let wiggleWorm config boundary refCounts worm =
     ncurses {
-        let! wiggledWorm = Worm.wiggle random boundary worm
+        let! wiggledWorm = Worm.wiggle config.Random boundary worm
         let head = Worm.head wiggledWorm
         let tail = Worm.tail worm
 
@@ -299,17 +299,17 @@ let wiggleWorm config random boundary refCounts worm =
         return wiggledWorm
     }
 
-let rec loop config random boundary refCounts worms =
+let rec loop config boundary refCounts worms =
     ncurses {
         let! userQuit = checkUserInput ()
 
         if userQuit then
             return! cleanup ()        
         else
-            let! wiggledWorms = Choice.Array.map (wiggleWorm config random boundary refCounts) worms
+            let! wiggledWorms = Choice.Array.map (wiggleWorm config boundary refCounts) worms
             do! napms 12s
             do! refresh ()
-            return! loop config random boundary refCounts wiggledWorms
+            return! loop config boundary refCounts wiggledWorms
     }    
 
 let run config =
@@ -329,7 +329,7 @@ let run config =
         do! refresh ()
         do! nodelay win true  
         let worms = Worm.makeN (boundary, styleWormCharacters config.WormCharacters, config.WormLength, config.WormCount)
-        return! loop config (Random()) boundary refCounts worms     
+        return! loop config boundary refCounts worms     
     }
 
 [<EntryPoint>]
