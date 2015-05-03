@@ -222,11 +222,12 @@ let cleanup () =
     }
 
 let SET_COLOR (num, fg, bg) =
-    ncurses {
-        do! init_pair (num + CInt.one) fg bg
-        // TODO: what does flavor do?
-        //do flavor.[int num] <- flavor.[int num] ||| Color.COLOR_PAIR(num + CInt.one) ||| Attribute.A_BOLD
-    }
+    init_pair (num + CInt.one) fg bg
+
+let styleWormCharacters (wormCharacters: ChType array) =
+    wormCharacters
+    |> Array.mapi (fun i ch ->
+        ch ||| Color.COLOR_PAIR(CInt.ofInt i + CInt.one) ||| Fncurses.Core.Attributes.Attribute.A_BOLD)
 
 let initColors () =
     ncurses {
@@ -262,9 +263,7 @@ let checkUserInput () =
     }
 
 // TODO: resize screen
-// TODO: color
 // TODO: ubuntu
-// TODO: chtype not char for addch etc
 
 let displayCharacter boundary coordinate ch =
     ncurses {
@@ -319,7 +318,6 @@ let run config =
         let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
         let refCounts = ReferenceCounters.empty (LINES (), COLS ())
         refCounts.[int boundary.Bottom, int boundary.Left] <- config.WormCount
-        let worms = Worm.makeN (boundary, config.WormCharacters, config.WormLength, config.WormCount)
         do! noecho ()
         do! cbreak () 
         do! nonl () 
@@ -330,6 +328,7 @@ let run config =
         do! napms 12s
         do! refresh ()
         do! nodelay win true  
+        let worms = Worm.makeN (boundary, styleWormCharacters config.WormCharacters, config.WormLength, config.WormCount)
         return! loop config (Random()) boundary refCounts worms     
     }
 
