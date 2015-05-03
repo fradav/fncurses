@@ -157,12 +157,12 @@ module ReferenceCounters =
         let refCount = refCounts.[int coordinate.Y, int coordinate.X] + 1
         refCounts.[int coordinate.Y, int coordinate.X] <- refCount
 
+
 open ExtCore
 open ExtCore.Control.Collections
 open ExtCore.Control.WorkflowBuilders
 open Fncurses.Core
-open Nessos.UnionArgParser        
-//open System
+open Nessos.UnionArgParser
 
 type Arguments =
     | [<AltCommandLine("-f")>] Field
