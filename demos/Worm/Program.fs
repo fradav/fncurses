@@ -246,24 +246,27 @@ let initColors () =
             do! SET_COLOR(6s, Color.COLOR_YELLOW, bg)
     }
 
-let checkUserInput () =
+let checkUserInput config boundary refCounts =
     ncurses {
         match getch () with
         | Success ch ->
-            match char ch with
-            | 'q' -> return true // Quit worms.
-            | 's' ->             // Enter single-step mode. 
-                do! nodelay (stdscr ()) false
-                return false
-            | ' ' ->             // Leave single-step mode.
-                do! nodelay (stdscr ()) true
-                return false
-            | _ -> return false  // Continue.                 
-        | _ -> return false      // No user input, so continue.             
+            if ch = KEY_RESIZE then
+                let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
+                let refCounts = ReferenceCounters.empty (LINES (), COLS ())
+                refCounts.[int boundary.Bottom, int boundary.Left] <- config.WormCount
+                return false,boundary,refCounts
+            else
+                match char ch with
+                | 'q' -> return true,boundary,refCounts // Quit worms.
+                | 's' ->                                // Enter single-step mode. 
+                    do! nodelay (stdscr ()) false
+                    return false,boundary,refCounts
+                | ' ' ->                                // Leave single-step mode.
+                    do! nodelay (stdscr ()) true
+                    return false,boundary,refCounts
+                | _ -> return false,boundary,refCounts  // Continue.                 
+        | _ -> return false,boundary,refCounts          // No user input, so continue.             
     }
-
-// TODO: resize screen
-// TODO: ubuntu
 
 let displayCharacter boundary coordinate ch =
     ncurses {
@@ -301,7 +304,7 @@ let wiggleWorm config boundary refCounts worm =
 
 let rec loop config boundary refCounts worms =
     ncurses {
-        let! userQuit = checkUserInput ()
+        let! userQuit,boundary,refCounts = checkUserInput config boundary refCounts
 
         if userQuit then
             return! cleanup ()        
