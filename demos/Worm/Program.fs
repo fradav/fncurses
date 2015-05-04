@@ -114,21 +114,29 @@ module Worm =
     let tail worm =
         worm.Body.[(worm.HeadIndex + 1) % worm.Body.Length]
         
-    let nextBearing (random: System.Random) boundary (bearing: Bearing) =
-        function | Coordinate.Position boundary position ->
-                       let possibleNextBearings = bearingOptions.[int position, int bearing]
-                       match possibleNextBearings.Length with
-                       | 0 -> Choice.failwithf "there are no possible next bearings for position %A and bearing %A" position bearing
-                       | 1 -> Choice.result possibleNextBearings.[0]
-                       | n -> Choice.result possibleNextBearings.[random.Next(0, n)]
-                 | coordinate -> Choice.failwithf "the coordinate %A is out-of-bounds" coordinate        
+    let nextBearing (random: System.Random) boundary (bearing: Bearing) head =
+        match head with
+        | Coordinate.Position boundary position ->
+            choice {
+                let possibleNextBearings = bearingOptions.[int position, int bearing]
+                let! nextBearing =
+                    match possibleNextBearings.Length with
+                    | 0 -> Choice.failwithf "there are no possible next bearings for position %A and bearing %A" position bearing
+                    | 1 -> Choice.result possibleNextBearings.[0]
+                    | n -> Choice.result possibleNextBearings.[random.Next(0, n)]
+                let yIncrement,xIncrement = bearingIncrements.[int nextBearing]
+                let nextHead = Coordinate.make (head.Y + yIncrement, head.X + xIncrement)
+                return nextBearing,nextHead
+            }
+        | coordinate ->
+            // Out-of-bounds coordinates may occur following a resize event.
+            // Start the worm again at the bottom-left corner.
+            Choice.result (Bearing.SW,Coordinate.make (boundary.Bottom, boundary.Left))
 
     let wiggle random boundary worm =
         choice {
             let head = head worm
-            let! nextBearing = nextBearing random boundary worm.Bearing head
-            let yIncrement,xIncrement = bearingIncrements.[int nextBearing]
-            let nextHead = Coordinate.make (head.Y + yIncrement, head.X + xIncrement)
+            let! nextBearing,nextHead = nextBearing random boundary worm.Bearing head
             let nextHeadIndex = (worm.HeadIndex + 1) % worm.Body.Length
             let nextBody = Array.copy worm.Body
             nextBody.[nextHeadIndex] <- nextHead
@@ -163,6 +171,7 @@ module ReferenceCounters =
         let length2 = min (Array2D.base2 refCounts) (Array2D.base2 refCounts')
         Array2D.blit refCounts 0 0 refCounts' 0 0 length1 length2
         refCounts'
+
 
 open ExtCore
 open ExtCore.Control.Collections
@@ -259,7 +268,6 @@ let checkUserInput config boundary refCounts =
             if ch = KEY_RESIZE then
                 let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
                 let refCounts = ReferenceCounters.resize refCounts boundary
-                //refCounts.[int boundary.Bottom, int boundary.Left] <- config.WormCount
                 return false,boundary,refCounts
             else
                 match char ch with

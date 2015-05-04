@@ -112,6 +112,9 @@ let (c,d,e,f,g,h,i) = sscanf "%b-%d-%i,%u,%x,%X,%o" "false-42--31,13,ff,FF,42"
 let (j,k,l,m,n,o,p) = sscanf "%f %F %g %G %e %E %c" "1 2.1 3.4 .3 43.2e32 0 f"
 
 
+let a = Array2D.zeroCreate<int> 4 4
+let b = Array2D.create 2 2 1
+Array2D.blit b 0 0 a 0 0 2 2
 
 // Resources
 
