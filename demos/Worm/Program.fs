@@ -157,6 +157,12 @@ module ReferenceCounters =
         let refCount = refCounts.[int coordinate.Y, int coordinate.X] + 1
         refCounts.[int coordinate.Y, int coordinate.X] <- refCount
 
+    let resize (refCounts: ReferenceCounters) boundary =
+        let refCounts' = Array2D.zeroCreate<int> (int boundary.Bottom + 1) (int boundary.Right + 1)
+        let length1 = min (Array2D.base1 refCounts) (Array2D.base1 refCounts')
+        let length2 = min (Array2D.base2 refCounts) (Array2D.base2 refCounts')
+        Array2D.blit refCounts 0 0 refCounts' 0 0 length1 length2
+        refCounts'
 
 open ExtCore
 open ExtCore.Control.Collections
@@ -252,8 +258,8 @@ let checkUserInput config boundary refCounts =
         | Success ch ->
             if ch = KEY_RESIZE then
                 let boundary = Boundary.make (0s, COLS () - 1s, LINES () - 1s, 0s)     
-                let refCounts = ReferenceCounters.empty (LINES (), COLS ())
-                refCounts.[int boundary.Bottom, int boundary.Left] <- config.WormCount
+                let refCounts = ReferenceCounters.resize refCounts boundary
+                //refCounts.[int boundary.Bottom, int boundary.Left] <- config.WormCount
                 return false,boundary,refCounts
             else
                 match char ch with
