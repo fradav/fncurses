@@ -108,8 +108,7 @@ let notes =
 let dependencies (x: SourceProject) =
     x.Dependencies 
     |> List.choose (function | Package x -> Some (x, GetPackageVersion "packages" x)
-                             | Local x -> Some (x, nugetVersion)
-                             | _ -> None)
+                             | Local x -> Some (x, nugetVersion))
 
 let extensions =
     [ 
