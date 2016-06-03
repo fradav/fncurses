@@ -90,7 +90,7 @@ module internal Platform =
 #endif
 
     let nixLibraryPath dll =
-        Path.Combine(root,"lib","native","darwin","universal",dll)
+        "/usr/lib/libncursesw.so"
 
     let macLibraryPath dll = 
         Path.Combine(root,"lib","native","darwin","universal",dll)
